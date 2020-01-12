@@ -688,12 +688,12 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                     ImageStack xImgStack = new ImageStack(dimX, dimY);
                     ImageStack yImgStack = new ImageStack(dimX, dimY);
                     ImageStack imgStack = new ImageStack(dimX, dimY);
-                    ImageStack resultStack = new ImageStack(dimX, dimY);
+                    //ImageStack resultStack = new ImageStack(dimX, dimY);
+                    ImageStack resultStack = new ImageStack();
 
                     //initialisation
                     ImageProcessor ipResTime = null;
                     ImagePlus result = null, xImage = null, yImage = null, image = null;
-                    ArrayList<Double> rMeasure = null;
                     HashMap ResTimeHMap = ds.getHMap("Residence Time");
 
                     for (int mouse = 0; mouse < ds.getTotalMice(); mouse++) {
@@ -707,6 +707,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                             }
                             //resTime
                             ipResTime = (ImageProcessor) ResTimeHMap.get(mouse);
+                            resTimeStack.addSlice(ipResTime);
 
                             if (j > 0 && j < 5) {
                                 //for ximg, y img, div and curl
@@ -718,7 +719,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                                 yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
                             } else {
                                 //for heat map and gradient
-                                rMeasure = this.vectorMagnitude(measure);
+                                ArrayList<Double> rMeasure = this.vectorMagnitude(measure);
                                 image = this.createImage(series, rMeasure);
                                 imgStack.addSlice(image.getProcessor());
                                 image = this.thresholdedSurfaceFit3(ipResTime, image);
@@ -747,8 +748,9 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                                 Plot vectorMap = new Plot(resultHMap + " vector plot", "X Axis", "Y Axis");
                                 vectorMap.setLimits(0, dimX, 0, dimY);
                                 vectorMap.drawVectors(X0, Y0, X1, Y1);
-//                          vectorMap.show();
+//                                vectorMap.show();
                                 result = vectorMap.getImagePlus();
+//                                result = vectorMap.makeHighResolution(vectorMap.getTitle(), 1, true, true);
                                 break;
                             case 1: //x img
                                 output = "xImg";
@@ -782,28 +784,53 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                         } else {
                             //add to stack if more than 1 mouse per trial
                             resultStack.addSlice(result.getProcessor());
-//                                resTimeStack.addSlice(ipResTime);
                         }
                     }
 
-                    if (j != 0 && ds.getTotalMice() != 1) {
+                    if (ds.getTotalMice() != 1) {
                         //save stack
-                        ImagePlus imgStackImp = new ImagePlus(resultHMap + "_" + output + "_T" + ds_counter, imgStack);
-                        new FileSaver(imgStackImp).saveAsTiffStack(dir.getPath() + File.separator + imgStackImp.getTitle() + ".tif");
-                        ImagePlus resTimeStackImp = new ImagePlus("ResTime_" + output + "_T" + ds_counter, resTimeStack);
-                        ImagePlus xImgStackImp = new ImagePlus("xImg_" + resultHMap + "_" + output + "_T" + ds_counter, xImgStack);
-                        ImagePlus yImgStackImp = new ImagePlus("yImg_" + resultHMap + "_" + output + "_T" + ds_counter, yImgStack);
-
-                        //average mouse calculations go here
-                        if (jCheckBoxAverageMouse.isSelected()) {
-                            ImagePlus aveResTime = ZProjector.run(resTimeStackImp, "sum");
-                            ImagePlus avexImg = ZProjector.run(xImgStackImp, "sum");
-                            ImagePlus aveyImg = ZProjector.run(yImgStackImp, "sum");
-
-                        }
-
+                        ImagePlus resultStackImp = new ImagePlus(resultHMap + "_" + output + "_T" + ds_counter, resultStack);
+                        new FileSaver(resultStackImp).saveAsTiffStack(dir.getPath() + File.separator + resultStackImp.getTitle() + ".tif");
                     }
 
+                    //average mouse calculations go here
+                    if (jCheckBoxAverageMouse.isSelected() && j != 0) {
+                        ImagePlus resTimeStackImp = new ImagePlus("ResTime_" + output + "_T" + ds_counter, resTimeStack);
+                        ImagePlus aveResTime = ZProjector.run(resTimeStackImp, "sum");
+                        ImagePlus aveXImage = null, aveYImage = null, aveImage = null;
+                        
+                            if (j > 0 && j < 5) {
+                                ImagePlus xImgStackImp = new ImagePlus("xImg_" + resultHMap + "_" + output + "_T" + ds_counter, xImgStack);
+                                ImagePlus yImgStackImp = new ImagePlus("yImg_" + resultHMap + "_" + output + "_T" + ds_counter, yImgStack);
+                                ImagePlus avexImg = ZProjector.run(xImgStackImp, "sum");
+                                ImagePlus aveyImg = ZProjector.run(yImgStackImp, "sum");
+                                aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), avexImg);
+                                aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveyImg);
+                            } else {
+                                ImagePlus imgStackImp = new ImagePlus("img_" + resultHMap + "_" + output + "_T" + ds_counter, imgStack);
+                                ImagePlus aveImg = ZProjector.run(imgStackImp, "sum");
+                                aveImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveImg);
+                            }
+                            switch (j) {
+                                case 3: //Divergence
+                                    output = "div";
+                                    result = this.resizeImage(aveResTime.getProcessor(), this.divergence(aveXImage, aveYImage).getProcessor());
+                                    break;
+                                case 4: //Curl
+                                    output = "curl";
+                                    result = this.resizeImage(aveResTime.getProcessor(), this.curl(aveXImage, aveYImage).getProcessor());
+                                    break;
+                                case 6: //Gradient
+                                    output = "grad";
+                                    result = this.resizeImage(aveResTime.getProcessor(), this.gradient(aveImage).getProcessor());
+                                    break;
+                            }
+                            this.saveHeatMap(resultHMap + "_" + output + "_T" + ds_counter + "_aveM", result.getProcessor());
+                            if (j == Integer.MAX_VALUE) {
+                                break;
+                            }
+                        
+                    }
                     //trial completed.
                     ds_counter++;
                     System.out.println("Trial no. = " + ds_counter);
@@ -1097,28 +1124,6 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         return result;
     }
 
-//////            private ArrayList<Float> velErr(XYSeries series) {
-//////            ArrayList<Float> result = new ArrayList<>();
-//////
-//////            ArrayList<Float> RDist = this.dist(series);
-//////            XYSeries delVel = this.delVel(series);
-//////            XYSeries seriesCorr = this.corSeries(series);
-//////
-//////            //RVelErr Initialise
-//////            ArrayList<Float> XVelErr = new ArrayList<>();
-//////            ArrayList<Float> YVelErr = new ArrayList<>();
-//////            ArrayList<Float> Xcap = new ArrayList<>();
-//////            ArrayList<Float> Ycap = new ArrayList<>();
-//////            //Calculate RVelErr
-//////            for (int k = 0; k < (series.getItemCount() - 1); k++) {
-//////                Xcap.add(k, (seriesCorr.getX(k).floatValue() / RDist.get(k)));
-//////                Ycap.add(k, (seriesCorr.getY(k).floatValue() / RDist.get(k)));
-//////                XVelErr.add(k, ((delVel.getX(k).floatValue() * Xcap.get(k)) - delVel.getX(k).floatValue()));
-//////                YVelErr.add(k, ((delVel.getY(k).floatValue() * Ycap.get(k)) - delVel.getY(k).floatValue()));
-//////                result.add(k, this.getMeasureMagnitude(XVelErr, YVelErr).get(k));
-//////            }
-//////            return result;
-//////        }
     /**
      * save heat map
      */
@@ -1301,7 +1306,6 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         return imp;
     }
 
-//    }
     /**
      * @param args the command line arguments
      */
