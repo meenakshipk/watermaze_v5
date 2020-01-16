@@ -32,6 +32,8 @@ public class DataStore {
     private HashMap<Integer, DataTrace_ver1> velocityAPt = null;
     private HashMap<Integer, DataTrace_ver1> velocityPPt = null;
     private HashMap<Integer, DataTrace_ver1> velocityError = null;
+    private HashMap<String, HashMap<Integer, Float>> RmPlot = null;
+
 //    private HashMap<Integer, ArrayList<Double>> distance = null;
 //    private HashMap<Integer, ArrayList<Double>> speed = null;
 //    private HashMap<Integer, ArrayList<Double>> speedAPt = null;
@@ -100,7 +102,10 @@ public class DataStore {
             case "Velocity Error":
                 result = velocityError;
                 break;
-            case "Distance":
+            case "Rm Plot":
+                result = RmPlot;
+                break;
+//            case "Distance":
 //                result = distance;
 //                break;
 //            case "Speed":
@@ -141,6 +146,9 @@ public class DataStore {
                 break;
             case "Velocity Error":
                 velocityError = hm;
+                break;
+            case "Rm Plot":
+                RmPlot = hm;
                 break;
 //            case "Distance":
 //                distance = hm;

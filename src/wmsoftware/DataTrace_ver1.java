@@ -388,7 +388,8 @@ public class DataTrace_ver1 extends ArrayList<OrdXYData> {
 
         DataTrace_ver1 binnedData = new DataTrace_ver1();
         this.sortData(binInX);
-        double binStart = (double) ((binInX) ? this.get(0).getX() : this.get(0).getY());
+//        double binStart = (double) ((binInX) ? this.get(0).getX() : this.get(0).getY());
+        double binStart = 0d;
         double binEnd = binStart + binWidth;
         double halfbinWidth = binWidth / 2;
         double binCtr = binStart + halfbinWidth;
@@ -416,19 +417,17 @@ public class DataTrace_ver1 extends ArrayList<OrdXYData> {
                     binCtr = binStart + halfbinWidth;
                     binEnd = binStart + binWidth;
                 }
+            } else if (curY >= binStart && curY < binEnd) {
+                sum += curX;
+                count++;
             } else {
-                if (curY >= binStart && curY < binEnd) {
-                    sum += curX;
-                    count++;
-                } else {
-                    double xData = sum / count;
-                    binnedData.addData(binCtr, (sum / count));
-                    sum = curX;
-                    count = 1;
-                    binStart = curY;
-                    binCtr = binStart + halfbinWidth;
-                    binEnd = binStart + binWidth;
-                }
+                double xData = sum / count;
+                binnedData.addData(binCtr, (sum / count));
+                sum = curX;
+                count = 1;
+                binStart = curY;
+                binCtr = binStart + halfbinWidth;
+                binEnd = binStart + binWidth;
             }
         }
         return binnedData;
