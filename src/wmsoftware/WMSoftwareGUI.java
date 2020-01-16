@@ -641,165 +641,47 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
 //        bs2.set(1, jCheckBoxxImg.isSelected());
 //        bs2.set(2, jCheckBoxyImg.isSelected());
 
-        String resultHMap = "";
+        String resultHMapName = "";
         for (int i = bs.nextSetBit(1); i >= 0; i = bs.nextSetBit(i + 1)) {
 
             switch (i) {
 //                case 0: //Residence Time
-//                    resultHMap = "Residence Time";
+//                    resultHMapName = "Residence Time";
 //                    break;
                 case 1: //Displacement
-                    resultHMap = "Displacement";
+                    resultHMapName = "Displacement";
                     break;
                 case 2: //Velocity
-                    resultHMap = "Velocity";
+                    resultHMapName = "Velocity";
                     break;
                 case 3: //Velocity a pt
-                    resultHMap = "Velocity along Platform";
+                    resultHMapName = "Velocity along Platform";
                     break;
                 case 4: //Velocity p pt
-                    resultHMap = "Velocity perpendicular Platform";
+                    resultHMapName = "Velocity perpendicular Platform";
                     break;
                 case 5: //Velocity Error
-                    resultHMap = "Velocity Error";
+                    resultHMapName = "Velocity Error";
                     break;
             }
 
-//            //Method 2 - lets see if this is better, atleast readability and writing wise
-//            String output = "";
-////            for (int j = bs2.nextSetBit(0); j >= 0; j = bs2.nextSetBit(j + 1)) {
-//
-//            int ds_counter = 0;
-//            for (DataStore ds : dss) {
-//                HashMap PositionHMap = ds.getHMap("Position");
-//                HashMap HMap = ds.getHMap(resultHMap);
-//                if (HMap == null) {
-//                    JOptionPane.showMessageDialog(frame, "Please calculate " + resultHMap + ".", "ERROR", JOptionPane.ERROR_MESSAGE);
-//                    return;
-//                }
-//                //initialise stack for ave mouse
-//                ImageStack resTimeStack = new ImageStack(dimX, dimY);
-//                ImageStack xImgStack = new ImageStack(dimX, dimY);
-//                ImageStack yImgStack = new ImageStack(dimX, dimY);
-//                ImageStack imgStack = new ImageStack(dimX, dimY);
-//
-//                for (int mouse = 0; mouse < ds.getTotalMice(); mouse++) {
-//                    DataTrace_ver1 series = (DataTrace_ver1) PositionHMap.get(mouse);
-//                    DataTrace_ver1 measure = (DataTrace_ver1) HMap.get(mouse);
-//
-//                    //ASCII
-//                    if (bs2.get(0)) {
-//                        output = "ASCII";
-//                        DataTrace_ver1 measureOut = new DataTrace_ver1();
-//                        for (int ii = 0; ii < measure.size(); ii++) {
-//                            double xVal = series.get(ii).getX().doubleValue() + measure.get(ii).getX().doubleValue();
-//                            double yVal = series.get(ii).getY().doubleValue() + measure.get(ii).getY().doubleValue();
-//                            measureOut.addData(xVal, yVal);
-//                        }
-//                        //write ascii
-////                            ds.writeFile(resultHMap + "_T" + ds_counter + "_M" + mouse, dir.getAbsolutePath(), series, measureOut);
-//                        //plot vectors
-//                        ArrayList<Double> X1 = (ArrayList<Double>) measureOut.getX();
-//                        ArrayList<Double> Y1 = (ArrayList<Double>) measureOut.getY();
-//                        ArrayList<Double> X0 = (ArrayList<Double>) series.getX();
-//                        X0.remove(X0.get(X1.size()));
-//                        ArrayList<Double> Y0 = (ArrayList<Double>) series.getY();
-//                        Y0.remove(Y0.get(Y1.size()));
-//                        Plot vectorMap = new Plot(resultHMap + " vector plot", "X Axis", "Y Axis");
-//                        vectorMap.setLimits(0, dimX, 0, dimY);
-//                        vectorMap.drawVectors(X0, Y0, X1, Y1);
-////                                vectorMap.show();
-//                        ImagePlus result = vectorMap.getImagePlus();
-////                                result = vectorMap.makeHighResolution(vectorMap.getTitle(), 1, true, true);
-//                        new FileSaver(result).saveAsTiff(dir.getPath() + File.separator + result.getTitle()+"_T"+ ds_counter+"_M"+ mouse + ".tif");
-//                    }
-//
-//                    //div, curl, hm, grad
-//                    if (!bs2.get(1, 5).isEmpty()) {
-//                        HashMap ResTimeHMap = ds.getHMap("Residence Time");
-//                        if (ResTimeHMap == null) {
-//                            JOptionPane.showMessageDialog(frame, "Please calculate Residence Time.", "ERROR", JOptionPane.ERROR_MESSAGE);
-//                            return;
-//                        }
-//                        ImageProcessor ipResTime = (ImageProcessor) ResTimeHMap.get(mouse);
-//                        resTimeStack.addSlice(ipResTime);
-//
-//                        //vector fields
-//                        if (!bs2.get(1, 3).isEmpty()) {
-//                            //initialisation
-//                            ImagePlus xImage = this.createImage(series, measure.getX());
-//                            ImagePlus yImage = this.createImage(series, measure.getY());
-//                            xImgStack.addSlice(xImage.getProcessor());
-//                            yImgStack.addSlice(yImage.getProcessor());
-//                            xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
-//                            yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
-//                            if (bs2.get(1)) {
-//                                output = "div";
-//                                ImagePlus result = this.resizeImage(ipResTime, this.divergence(xImage, yImage).getProcessor());
-//                                this.saveHeatMap(resultHMap + "_" + output + "_T" + ds_counter + "_M" + mouse, result.getProcessor());
-//                            }
-//                            if (bs2.get(2)) {
-//                                output = "curl";
-//                                ImagePlus result = this.resizeImage(ipResTime, this.curl(xImage, yImage).getProcessor());
-//                                this.saveHeatMap(resultHMap + "_" + output + "_T" + ds_counter + "_M" + mouse, result.getProcessor());
-//                            }
-//                        }
-//                        //scalar
-//                        if (!bs2.get(3, 5).isEmpty()) {
-//                            ArrayList<Double> rMeasure = this.vectorMagnitude(measure);
-//                            ImagePlus image = this.createImage(series, rMeasure);
-//                            imgStack.addSlice(image.getProcessor());
-//                            if (bs2.get(3)) {
-//                                output = "hm";
-//                                this.saveHeatMap(resultHMap + "_" + output + "_T" + ds_counter + "_M" + mouse, image.getProcessor());
-//                            }
-//                            if (bs2.get(4)) {
-//                                image = this.thresholdedSurfaceFit3(ipResTime, image);
-//                                output = "grad";
-//                                ImagePlus result = this.resizeImage(ipResTime, this.gradient(image).getProcessor());
-//                            }
-//                        }
-//                    }
-//                }
-//                if (jCheckBoxAverageMouse.isSelected()) {
-//
-//                    //vector fields
-//                    if (!bs2.get(1, 5).isEmpty()) {
-//                    }
-//                    //scalar
-//                    if (!bs2.get(5, 7).isEmpty()) {
-//                    }
-//                }
-//                ds_counter++;
-//            }
-////                if (j == Integer.MAX_VALUE) {
-////                    break;
-////                }
-////            }
-//            if (i == Integer.MAX_VALUE) {
-//                break;
-//            }
-//        }
-//        System.out.println("Button click done.");
-            //Method 1 - really messed up my mind to be honest
+            //Method 1.2 -
             //doesnt work with restime selection
             //loop through other selections
             String output = "";
             for (int j = bs2.nextSetBit(0); j >= 0; j = bs2.nextSetBit(j + 1)) {
-
                 int ds_counter = 0;
                 ImageStack trialResultStack = new ImageStack(dimX, dimY);
                 for (DataStore ds : dss) {
                     HashMap PositionHMap = ds.getHMap("Position");
-                    HashMap HMap = ds.getHMap(resultHMap);
+                    HashMap HMap = ds.getHMap(resultHMapName);
+
+                    //initialisation
                     ImageStack resTimeStack = new ImageStack(dimX, dimY);
                     ImageStack xImgStack = new ImageStack(dimX, dimY);
                     ImageStack yImgStack = new ImageStack(dimX, dimY);
                     ImageStack imgStack = new ImageStack(dimX, dimY);
                     ImageStack resultStack = new ImageStack();
-
-                    //initialisation
-                    ImageProcessor ipResTime = null;
                     ImagePlus result = null, xImage = null, yImage = null, image = null;
                     HashMap ResTimeHMap = ds.getHMap("Residence Time");
 
@@ -807,63 +689,51 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                         DataTrace_ver1 series = (DataTrace_ver1) PositionHMap.get(mouse);
                         DataTrace_ver1 measure = (DataTrace_ver1) HMap.get(mouse);
 
-                        if (j != 0) {
-                            if (ResTimeHMap == null) {
-                                JOptionPane.showMessageDialog(frame, "Please calculate Residence Time.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                                return;
-                            }
-                            //resTime
-                            ipResTime = (ImageProcessor) ResTimeHMap.get(mouse);
-                            resTimeStack.addSlice(ipResTime);
+                        if (ResTimeHMap == null) {
+                            JOptionPane.showMessageDialog(frame, "Please calculate Residence Time.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                        //resTime
+                        ImageProcessor ipResTime = (ImageProcessor) ResTimeHMap.get(mouse);
+                        resTimeStack.addSlice(ipResTime);
 
-                            if (j == 1 || j == 2) {
-                                //for div and curl
-                                xImage = this.createImage(series, measure.getX());
-                                yImage = this.createImage(series, measure.getY());
-                                xImgStack.addSlice(xImage.getProcessor());
-                                yImgStack.addSlice(yImage.getProcessor());
-                                xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
-                                yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
-                            } else {
-                                //for heat map and gradient
-                                ArrayList<Double> rMeasure = this.vectorMagnitude(measure);
-                                image = this.createImage(series, rMeasure);
-                                imgStack.addSlice(image.getProcessor());
-                            }
+                        if (j < 3) {
+                            //for vector map, div and curl
+                            //create sumPixels image
+                            xImage = this.sumPixelsImage(series, measure.getX());
+                            yImage = this.sumPixelsImage(series, measure.getY());
+                            xImgStack.addSlice(xImage.getProcessor());
+                            yImgStack.addSlice(yImage.getProcessor());
+                            //ResTime weighted
+                            //CANNOT average by dividing sumPixels image with resTime - AS IT CREATES NaNs :(
+                            xImage = this.resTimeWeightedMap(ipResTime, xImage.getProcessor());
+                            yImage = this.resTimeWeightedMap(ipResTime, yImage.getProcessor());
+                        } else {
+                            //for heat map and gradient
+                            //create sumPixels image
+                            ArrayList<Double> rMeasure = this.vectorMagnitude(measure);
+                            image = this.sumPixelsImage(series, rMeasure);
+                            imgStack.addSlice(image.getProcessor());
+                            //restime weighted
+                            image = this.resTimeWeightedMap(ipResTime, image.getProcessor());
                         }
 
                         switch (j) {
                             case 0:
                                 //write vector measure into an ascii file
                                 output = "vector";
-                                DataTrace_ver1 measureOut = new DataTrace_ver1();
-                                for (int ii = 0; ii < measure.size(); ii++) {
-                                    double xVal = series.get(ii).getX().doubleValue() + measure.get(ii).getX().doubleValue();
-                                    double yVal = series.get(ii).getY().doubleValue() + measure.get(ii).getY().doubleValue();
-                                    measureOut.addData(xVal, yVal);
-                                }
-                                //write ascii
-//                            ds.writeFile(resultHMap + "_T" + ds_counter + "_M" + mouse, dir.getAbsolutePath(), series, measureOut);
-                                //plot vectors
-                                ArrayList<Double> X1 = (ArrayList<Double>) measureOut.getX();
-                                ArrayList<Double> Y1 = (ArrayList<Double>) measureOut.getY();
-                                ArrayList<Double> X0 = (ArrayList<Double>) series.getX();
-                                X0.remove(X0.get(X1.size()));
-                                ArrayList<Double> Y0 = (ArrayList<Double>) series.getY();
-                                Y0.remove(Y0.get(Y1.size()));
-                                Plot vectorMap = new Plot(resultHMap + " vector plot", "X Axis", "Y Axis");
-                                vectorMap.setLimits(0, dimX, 0, dimY);
-                                vectorMap.drawVectors(X0, Y0, X1, Y1);
-                                vectorMap.show();
-                                result = vectorMap.getImagePlus();
-//                                result = vectorMap.makeHighResolution(vectorMap.getTitle(), 1, true, true);
+                                result = this.vectorMap(xImage, yImage, resultHMapName);
                                 break;
                             case 1: //Divergence
                                 output = "div";
+                                xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
+                                yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
                                 result = this.resizeImage(ipResTime, this.divergence(xImage, yImage).getProcessor());
                                 break;
                             case 2: //Curl
                                 output = "curl";
+                                xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
+                                yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
                                 result = this.resizeImage(ipResTime, this.curl(xImage, yImage).getProcessor());
                                 break;
                             case 3: //Heat map
@@ -872,12 +742,13 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                                 break;
                             case 4: //Gradient
                                 output = "grad";
+                                image = this.thresholdedSurfaceFit3(ipResTime, image);
                                 result = this.resizeImage(ipResTime, this.gradient(image).getProcessor());
                                 break;
                         }
                         if (ds.getTotalMice() == 1) {
                             //save individual file if only 1 mouse per trial
-                            this.saveHeatMap(resultHMap + "_" + output + "_T" + ds_counter + "_M" + mouse, result.getProcessor());
+                            this.saveHeatMap(resultHMapName + "_" + output + "_T" + ds_counter + "_M" + mouse, result.getProcessor());
                         } else {
                             //add to stack if more than 1 mouse per trial
                             resultStack.addSlice(result.getProcessor());
@@ -886,7 +757,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                     }
                     if (ds.getTotalMice() != 1) {
                         //save stack
-                        ImagePlus resultStackImp = new ImagePlus(resultHMap + "_" + output + "_T" + ds_counter, resultStack);
+                        ImagePlus resultStackImp = new ImagePlus(resultHMapName + "_" + output + "_T" + ds_counter, resultStack);
                         new FileSaver(resultStackImp).saveAsTiffStack(dir.getPath() + File.separator + resultStackImp.getTitle() + ".tif");
                     }
 
@@ -896,24 +767,36 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                         ImagePlus aveResTime = ZProjector.run(resTimeStackImp, "sum");
                         ImagePlus aveXImage = null, aveYImage = null, aveImage = null;
 
-                        if (j == 1 || j == 2) {
-                            ImagePlus xImgStackImp = new ImagePlus("xImg_" + resultHMap + "_" + output + "_T" + ds_counter, xImgStack);
-                            ImagePlus yImgStackImp = new ImagePlus("yImg_" + resultHMap + "_" + output + "_T" + ds_counter, yImgStack);
-                            ImagePlus avexImg = ZProjector.run(xImgStackImp, "sum");
-                            ImagePlus aveyImg = ZProjector.run(yImgStackImp, "sum");
-                            aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), avexImg);
-                            aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveyImg);
+                        if (j < 3) {
+                            ImagePlus xImgStackImp = new ImagePlus("xImg_" + resultHMapName + "_" + output + "_T" + ds_counter, xImgStack);
+                            ImagePlus yImgStackImp = new ImagePlus("yImg_" + resultHMapName + "_" + output + "_T" + ds_counter, yImgStack);
+                            aveXImage = ZProjector.run(xImgStackImp, "sum");
+                            aveYImage = ZProjector.run(yImgStackImp, "sum");
+                            //restime weighted
+                            aveXImage = this.resTimeWeightedMap(aveResTime.getProcessor(), aveXImage.getProcessor());
+                            aveYImage = this.resTimeWeightedMap(aveResTime.getProcessor(), aveYImage.getProcessor());
                         } else {
-                            ImagePlus imgStackImp = new ImagePlus("img_" + resultHMap + "_" + output + "_T" + ds_counter, imgStack);
+                            ImagePlus imgStackImp = new ImagePlus("img_" + resultHMapName + "_" + output + "_T" + ds_counter, imgStack);
                             aveImage = ZProjector.run(imgStackImp, "sum");
+                            //restime weighted
+                            aveImage = this.resTimeWeightedMap(aveResTime.getProcessor(), aveImage.getProcessor());
                         }
                         switch (j) {
+                            case 0:
+                                //write vector measure into an ascii file
+                                output = "vector";
+                                result = this.vectorMap(aveXImage, aveYImage, resultHMapName);
+                                break;
                             case 1: //Divergence
                                 output = "div";
+                                aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveXImage);
+                                aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveYImage);
                                 result = this.resizeImage(aveResTime.getProcessor(), this.divergence(aveXImage, aveYImage).getProcessor());
                                 break;
                             case 2: //Curl
                                 output = "curl";
+                                aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveXImage);
+                                aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveYImage);
                                 result = this.resizeImage(aveResTime.getProcessor(), this.curl(aveXImage, aveYImage).getProcessor());
                                 break;
                             case 3: //hm
@@ -930,7 +813,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                             //add ave mouse of a trial to trial stack
                             trialResultStack.addSlice(result.getProcessor());
                         } else {
-                            this.saveHeatMap(resultHMap + "_" + output + "_T" + ds_counter + "_aveM", result.getProcessor());
+                            this.saveHeatMap(resultHMapName + "_" + output + "_T" + ds_counter + "_aveM", result.getProcessor());
                         }
                     }
                     //trial completed.
@@ -939,20 +822,194 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                 }
                 if (jCheckBoxAverageMouse.isSelected() && dss.length != 1) {
                     //save stack of ave of all trials
-                    ImagePlus trialResultStackImp = new ImagePlus(resultHMap + "_" + output, trialResultStack);
+                    ImagePlus trialResultStackImp = new ImagePlus(resultHMapName + "_" + output, trialResultStack);
                     new FileSaver(trialResultStackImp).saveAsTiffStack(dir.getPath() + File.separator + trialResultStackImp.getTitle() + ".tif");
                 }
                 if (j == Integer.MAX_VALUE) {
                     break;
                 }
             }
-            System.out.println("Output Measure name: " + output + " " + resultHMap + " completed");
+            System.out.println("Output Measure name: " + output + " " + resultHMapName + " completed");
 
             if (i == Integer.MAX_VALUE) {
                 break;
             }
         }
         System.out.println("Button click done.");
+
+////////            
+////////            //Method 1 - really messed up my mind to be honest
+////////            //doesnt work with restime selection
+////////            //loop through other selections
+////////            String output = "";
+////////            for (int j = bs2.nextSetBit(0); j >= 0; j = bs2.nextSetBit(j + 1)) {
+////////
+////////                int ds_counter = 0;
+////////                ImageStack trialResultStack = new ImageStack(dimX, dimY);
+////////                for (DataStore ds : dss) {
+////////                    HashMap PositionHMap = ds.getHMap("Position");
+////////                    HashMap HMap = ds.getHMap(resultHMapName);
+////////                    ImageStack resTimeStack = new ImageStack(dimX, dimY);
+////////                    ImageStack xImgStack = new ImageStack(dimX, dimY);
+////////                    ImageStack yImgStack = new ImageStack(dimX, dimY);
+////////                    ImageStack imgStack = new ImageStack(dimX, dimY);
+////////                    ImageStack resultStack = new ImageStack();
+////////
+////////                    //initialisation
+////////                    ImageProcessor ipResTime = null;
+////////                    ImagePlus result = null, xImage = null, yImage = null, image = null;
+////////                    HashMap ResTimeHMap = ds.getHMap("Residence Time");
+////////
+////////                    for (int mouse = 0; mouse < ds.getTotalMice(); mouse++) {
+////////                        DataTrace_ver1 series = (DataTrace_ver1) PositionHMap.get(mouse);
+////////                        DataTrace_ver1 measure = (DataTrace_ver1) HMap.get(mouse);
+////////
+////////                        if (j != 0) {
+////////                            if (ResTimeHMap == null) {
+////////                                JOptionPane.showMessageDialog(frame, "Please calculate Residence Time.", "ERROR", JOptionPane.ERROR_MESSAGE);
+////////                                return;
+////////                            }
+////////                            //resTime
+////////                            ipResTime = (ImageProcessor) ResTimeHMap.get(mouse);
+////////                            resTimeStack.addSlice(ipResTime);
+////////
+////////                            if (j == 1 || j == 2) {
+////////                                //for div and curl
+////////                                xImage = this.createImage(series, measure.getX());
+////////                                yImage = this.createImage(series, measure.getY());
+////////                                xImgStack.addSlice(xImage.getProcessor());
+////////                                yImgStack.addSlice(yImage.getProcessor());
+////////                                xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
+////////                                yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
+////////                            } else {
+////////                                //for heat map and gradient
+////////                                ArrayList<Double> rMeasure = this.vectorMagnitude(measure);
+////////                                image = this.createImage(series, rMeasure);
+////////                                imgStack.addSlice(image.getProcessor());
+////////                            }
+////////                        }
+////////
+////////                        switch (j) {
+////////                            case 0:
+////////                                //write vector measure into an ascii file
+////////                                output = "vector";
+////////                                DataTrace_ver1 measureOut = new DataTrace_ver1();
+////////                                for (int ii = 0; ii < measure.size(); ii++) {
+////////                                    double xVal = series.get(ii).getX().doubleValue() + measure.get(ii).getX().doubleValue();
+////////                                    double yVal = series.get(ii).getY().doubleValue() + measure.get(ii).getY().doubleValue();
+////////                                    measureOut.addData(xVal, yVal);
+////////                                }
+////////                                //write ascii
+//////////                            ds.writeFile(resultHMapName + "_T" + ds_counter + "_M" + mouse, dir.getAbsolutePath(), series, measureOut);
+////////                                //plot vectors
+////////                                ArrayList<Double> X1 = (ArrayList<Double>) measureOut.getX();
+////////                                ArrayList<Double> Y1 = (ArrayList<Double>) measureOut.getY();
+////////                                ArrayList<Double> X0 = (ArrayList<Double>) series.getX();
+////////                                X0.remove(X0.get(X1.size()));
+////////                                ArrayList<Double> Y0 = (ArrayList<Double>) series.getY();
+////////                                Y0.remove(Y0.get(Y1.size()));
+////////                                Plot vectorMap = new Plot(resultHMapName + " vector plot", "X Axis", "Y Axis");
+////////                                vectorMap.setLimits(0, dimX, 0, dimY);
+////////                                vectorMap.drawVectors(X0, Y0, X1, Y1);
+////////                                vectorMap.show();
+////////                                result = vectorMap.getImagePlus();
+//////////                                result = vectorMap.makeHighResolution(vectorMap.getTitle(), 1, true, true);
+////////                                break;
+////////                            case 1: //Divergence
+////////                                output = "div";
+////////                                result = this.resizeImage(ipResTime, this.divergence(xImage, yImage).getProcessor());
+////////                                break;
+////////                            case 2: //Curl
+////////                                output = "curl";
+////////                                result = this.resizeImage(ipResTime, this.curl(xImage, yImage).getProcessor());
+////////                                break;
+////////                            case 3: //Heat map
+////////                                output = "hm";
+////////                                result = image;
+////////                                break;
+////////                            case 4: //Gradient
+////////                                output = "grad";
+////////                                result = this.resizeImage(ipResTime, this.gradient(image).getProcessor());
+////////                                break;
+////////                        }
+////////                        if (ds.getTotalMice() == 1) {
+////////                            //save individual file if only 1 mouse per trial
+////////                            this.saveHeatMap(resultHMapName + "_" + output + "_T" + ds_counter + "_M" + mouse, result.getProcessor());
+////////                        } else {
+////////                            //add to stack if more than 1 mouse per trial
+////////                            resultStack.addSlice(result.getProcessor());
+////////                        }
+////////                        //mouse over
+////////                    }
+////////                    if (ds.getTotalMice() != 1) {
+////////                        //save stack
+////////                        ImagePlus resultStackImp = new ImagePlus(resultHMapName + "_" + output + "_T" + ds_counter, resultStack);
+////////                        new FileSaver(resultStackImp).saveAsTiffStack(dir.getPath() + File.separator + resultStackImp.getTitle() + ".tif");
+////////                    }
+////////
+////////                    //average mouse calculations go here
+////////                    if (jCheckBoxAverageMouse.isSelected() && j != 0) {
+////////                        ImagePlus resTimeStackImp = new ImagePlus("ResTime_" + output + "_T" + ds_counter, resTimeStack);
+////////                        ImagePlus aveResTime = ZProjector.run(resTimeStackImp, "sum");
+////////                        ImagePlus aveXImage = null, aveYImage = null, aveImage = null;
+////////
+////////                        if (j == 1 || j == 2) {
+////////                            ImagePlus xImgStackImp = new ImagePlus("xImg_" + resultHMapName + "_" + output + "_T" + ds_counter, xImgStack);
+////////                            ImagePlus yImgStackImp = new ImagePlus("yImg_" + resultHMapName + "_" + output + "_T" + ds_counter, yImgStack);
+////////                            ImagePlus avexImg = ZProjector.run(xImgStackImp, "sum");
+////////                            ImagePlus aveyImg = ZProjector.run(yImgStackImp, "sum");
+////////                            aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), avexImg);
+////////                            aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveyImg);
+////////                        } else {
+////////                            ImagePlus imgStackImp = new ImagePlus("img_" + resultHMapName + "_" + output + "_T" + ds_counter, imgStack);
+////////                            aveImage = ZProjector.run(imgStackImp, "sum");
+////////                        }
+////////                        switch (j) {
+////////                            case 1: //Divergence
+////////                                output = "div";
+////////                                result = this.resizeImage(aveResTime.getProcessor(), this.divergence(aveXImage, aveYImage).getProcessor());
+////////                                break;
+////////                            case 2: //Curl
+////////                                output = "curl";
+////////                                result = this.resizeImage(aveResTime.getProcessor(), this.curl(aveXImage, aveYImage).getProcessor());
+////////                                break;
+////////                            case 3: //hm
+////////                                output = "hm";
+////////                                result = aveImage;
+////////                                break;
+////////                            case 4: //Gradient
+////////                                output = "grad";
+////////                                aveImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveImage);
+////////                                result = this.resizeImage(aveResTime.getProcessor(), this.gradient(aveImage).getProcessor());
+////////                                break;
+////////                        }
+////////                        if (dss.length != 1) {
+////////                            //add ave mouse of a trial to trial stack
+////////                            trialResultStack.addSlice(result.getProcessor());
+////////                        } else {
+////////                            this.saveHeatMap(resultHMapName + "_" + output + "_T" + ds_counter + "_aveM", result.getProcessor());
+////////                        }
+////////                    }
+////////                    //trial completed.
+////////                    ds_counter++;
+////////                    System.out.println("Trial no. = " + ds_counter);
+////////                }
+////////                if (jCheckBoxAverageMouse.isSelected() && dss.length != 1) {
+////////                    //save stack of ave of all trials
+////////                    ImagePlus trialResultStackImp = new ImagePlus(resultHMapName + "_" + output, trialResultStack);
+////////                    new FileSaver(trialResultStackImp).saveAsTiffStack(dir.getPath() + File.separator + trialResultStackImp.getTitle() + ".tif");
+////////                }
+////////                if (j == Integer.MAX_VALUE) {
+////////                    break;
+////////                }
+////////            }
+////////            System.out.println("Output Measure name: " + output + " " + resultHMapName + " completed");
+////////
+////////            if (i == Integer.MAX_VALUE) {
+////////                break;
+////////            }
+////////        }
+////////        System.out.println("Button click done.");
     }//GEN-LAST:event_jButtonGenerateMapsActionPerformed
 
     private void jButtonGeneratePlotsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGeneratePlotsActionPerformed
@@ -1226,59 +1283,41 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
     /**
      * calculate each pixel value given xy data points in DataTrace_ver1
      */
-    private ArrayList<Double> sumPixelValue(DataTrace_ver1 curSeries, ArrayList<Double> M) {
-        ArrayList<Double> result = new ArrayList<>();
-        for (int count = 0; count < (dimX * dimY); count++) {
-            result.add(0d);
-//                result.add(Float.NaN); //CANNOT USE THIS WHEN YOU WANT TO USE IMAGE FOR DIFFERENTIALS PLUGIN
-        }
+    private ImagePlus sumPixelsImage(DataTrace_ver1 curSeries, ArrayList<Double> M) {
+        ImagePlus image = new ImagePlus();
+        ImageProcessor ip = new FloatProcessor(dimX, dimY);
+        float[][] ipArray = ip.getFloatArray();
+//        ArrayList<Double> array = new ArrayList<>();
 
-        int size = curSeries.size() - 1;
+//        for (int count = 0; count < (dimX * dimY); count++) {
+//            array.add(0d);
+////                result.add(Float.NaN); //CANNOT USE THIS WHEN YOU WANT TO USE IMAGE FOR DIFFERENTIALS PLUGIN
+//        }
+        int size = M.size();
         for (int j = 0; j < size; j++) {
             double XPo = curSeries.get(j).getX().doubleValue();
             double YPo = curSeries.get(j).getY().doubleValue();
-            int arrayIdx = (int) ((Math.round(YPo) * 240) + Math.round(XPo));
-            result.set(arrayIdx, (result.get(arrayIdx) + M.get(j)));
-//                CANNOT USE NANs WHEN USING DIFFERENTIALS PLUGIN
-//                if (result.get(arrayIdx).isNaN()) {
-//                    result.set(arrayIdx, M.get(j));
-//                } else {
-//                    result.set(arrayIdx, (result.get(arrayIdx) + M.get(j)));
-//                }
+//            int arrayIdx = (int) ((Math.round(YPo) * 240) + Math.round(XPo));
+            int xPix = (int) Math.round(XPo);
+            int yPix = (int) Math.round(YPo);
+//            array.set(arrayIdx, (array.get(arrayIdx) + M.get(j)));
+            ipArray[xPix][yPix] = (float) (ipArray[xPix][yPix] + M.get(j));
+            //NOTE: CANNOT USE NANs WHEN USING ImageCalculator/SurfaceFit/Differentials plugin
         }
-        return result;
+        ip.setFloatArray(ipArray);
+        image.setProcessor(ip);
+        return image;
     }
 
     /**
      * generate residence time weighted heat map
      */
-    private ImageProcessor resTimeWeightedMap(ArrayList<Double> resTime, ArrayList<Double> measure) {
-
+    private ImagePlus resTimeWeightedMap(ImageProcessor resTimeMap, ImageProcessor measureMap) {
+        ImagePlus imagePlus = new ImagePlus();
         ImageProcessor ip = new FloatProcessor(dimX, dimY);
-        float[][] image = new float[dimX][dimY];
-        for (int Y = 0; Y < dimY; Y++) {
-            for (int X = 0; X < dimX; X++) {
-                int arrayIdx = (Y * dimX) + X;
-                if (resTime.get(arrayIdx) != 0) {
-                    image[X][Y] = (float) (measure.get(arrayIdx) / resTime.get(arrayIdx));
-//                    System.out.println(X + " " + Y + " Measure.get()arrayIdx: " + measure.get(arrayIdx) + " .floatValue(): " + measure.get(arrayIdx).floatValue());
-                } else {
-//                        image[X][Y] = Float.NaN;
-                    image[X][Y] = 0f;
-                }
-            }
-        }
-        ip.setFloatArray(image);
-        return ip;
-    }
-
-    /**
-     * generate residence time weighted heat map
-     */
-    private ImageProcessor resTimeWeightedMap(ImageProcessor resTimeMap, ImageProcessor measureMap) {
         float[][] resTime = resTimeMap.getFloatArray();
         float[][] measure = measureMap.getFloatArray();
-        ImageProcessor ip = new FloatProcessor(dimX, dimY);
+
         float[][] image = new float[dimX][dimY];
         for (int Y = 0; Y < dimY; Y++) {
             for (int X = 0; X < dimX; X++) {
@@ -1290,19 +1329,49 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
             }
         }
         ip.setFloatArray(image);
-        return ip;
+        imagePlus.setProcessor(ip);
+        return imagePlus;
     }
 
     /**
-     * create image using an arraylist of measure, such that pixels are weighted
-     * by residence time
+     * generate vector map
      */
-    private ImagePlus createImage(DataTrace_ver1 series, ArrayList<Double> measure) {
-        ImagePlus image = new ImagePlus();
-        ArrayList ImgArray = this.sumPixelValue(series, measure);
-        ImageProcessor Img = this.resTimeWeightedMap(this.residenceTime(series), ImgArray);
-        image.setProcessor(Img);
-        return image;
+    private ImagePlus vectorMap(ImagePlus xImage, ImagePlus yImage, String resultName) {
+        ImagePlus result = null;
+//        float[][] xFloatArray = xImage.getProcessor().getFloatArray();
+//        float[][] yFloatArray = yImage.getProcessor().getFloatArray();
+        ImageProcessor xImg = xImage.getProcessor();
+        ImageProcessor yImg = yImage.getProcessor();
+
+        double[] xBegin = new double[dimX * dimY];
+        double[] yBegin = new double[dimX * dimY];
+        double[] xEnd = new double[dimX * dimY];
+        double[] yEnd = new double[dimX * dimY];
+        ArrayList<Double> X0 = new ArrayList<>();
+        ArrayList<Double> Y0 = new ArrayList<>();
+        ArrayList<Double> X1 = new ArrayList<>();
+        ArrayList<Double> Y1 = new ArrayList<>();
+
+        for (int Y = 0; Y < dimY; Y++) {
+            for (int X = 0; X < dimX; X++) {
+                int arrayIdx = (Y * dimX) + X;
+                float xPixelValue = xImg.getPixelValue(X, Y);
+                float yPixelValue = yImg.getPixelValue(X, Y);
+                if(xPixelValue !=0 && yPixelValue !=0){
+                xBegin[arrayIdx] = X;
+                yBegin[arrayIdx] = Y;
+                xEnd[arrayIdx] = xPixelValue + X;
+                yEnd[arrayIdx] = yPixelValue + Y;
+            }
+        }
+        }
+        Plot vectorMap = new Plot(resultName + " vector plot", "X Axis", "Y Axis");
+        vectorMap.setLimits(0, dimX, 0, dimY);
+        vectorMap.drawVectors(xBegin, yBegin, xEnd, yEnd);
+        vectorMap.drawVectors(X0, Y0, X1, Y1);
+        vectorMap.show();
+        result = vectorMap.getImagePlus();
+        return result;
     }
 
     /**
