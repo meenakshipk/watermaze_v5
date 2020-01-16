@@ -32,6 +32,7 @@ public class DataStore {
     private HashMap<Integer, DataTrace_ver1> velocityAPt = null;
     private HashMap<Integer, DataTrace_ver1> velocityPPt = null;
     private HashMap<Integer, DataTrace_ver1> velocityError = null;
+    private HashMap<String, HashMap<Integer, Float>> RmMap = null;
     private HashMap<String, HashMap<Integer, Float>> RmPlot = null;
 
 //    private HashMap<Integer, ArrayList<Double>> distance = null;
@@ -39,7 +40,6 @@ public class DataStore {
 //    private HashMap<Integer, ArrayList<Double>> speedAPt = null;
 //    private HashMap<Integer, ArrayList<Double>> speedPPt = null;
 //    private HashMap<Integer, ArrayList<Double>> speedError = null;
-
     /**
      *
      * @param num Total number of mice
@@ -102,6 +102,9 @@ public class DataStore {
             case "Velocity Error":
                 result = velocityError;
                 break;
+            case "Rm Map":
+                result = RmMap;
+                break;
             case "Rm Plot":
                 result = RmPlot;
                 break;
@@ -146,6 +149,9 @@ public class DataStore {
                 break;
             case "Velocity Error":
                 velocityError = hm;
+                break;
+            case "Rm Map":
+                RmMap = hm;
                 break;
             case "Rm Plot":
                 RmPlot = hm;

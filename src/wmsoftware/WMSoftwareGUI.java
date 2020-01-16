@@ -24,6 +24,7 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.Serializable;
+import static java.lang.Float.NaN;
 import java.util.ArrayList;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -669,12 +670,14 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
             //doesnt work with restime selection
             //loop through other selections
             String output = "";
+            HashMap rmHMap = new HashMap<>();
             for (int j = bs2.nextSetBit(0); j >= 0; j = bs2.nextSetBit(j + 1)) {
                 int ds_counter = 0;
-                ImageStack trialResultStack = new ImageStack(dimX, dimY);
+                ImageStack trialResultStack = new ImageStack();
                 for (DataStore ds : dss) {
                     HashMap PositionHMap = ds.getHMap("Position");
                     HashMap HMap = ds.getHMap(resultHMapName);
+                    HashMap ResTimeHMap = ds.getHMap("Residence Time");
 
                     //initialisation
                     ImageStack resTimeStack = new ImageStack(dimX, dimY);
@@ -683,7 +686,8 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                     ImageStack imgStack = new ImageStack(dimX, dimY);
                     ImageStack resultStack = new ImageStack();
                     ImagePlus result = null, xImage = null, yImage = null, image = null;
-                    HashMap ResTimeHMap = ds.getHMap("Residence Time");
+                    HashMap rmFloatHMap = new HashMap<Integer, Float>();
+                    float Rm = Float.NaN;
 
                     for (int mouse = 0; mouse < ds.getTotalMice(); mouse++) {
                         DataTrace_ver1 series = (DataTrace_ver1) PositionHMap.get(mouse);
@@ -728,13 +732,17 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                                 output = "div";
                                 xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
                                 yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
-                                result = this.resizeImage(ipResTime, this.divergence(xImage, yImage).getProcessor());
+                                ImageProcessor div = this.divergence(xImage, yImage).getProcessor();
+                                Rm = this.RmFromMap(ipResTime, div);
+                                result = this.resizeImage(ipResTime, div);
                                 break;
                             case 2: //Curl
                                 output = "curl";
                                 xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
                                 yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
-                                result = this.resizeImage(ipResTime, this.curl(xImage, yImage).getProcessor());
+                                ImageProcessor curl = this.curl(xImage, yImage).getProcessor();
+                                Rm = this.RmFromMap(ipResTime, curl);
+                                result = this.resizeImage(ipResTime, curl);
                                 break;
                             case 3: //Heat map
                                 output = "hm";
@@ -743,9 +751,15 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                             case 4: //Gradient
                                 output = "grad";
                                 image = this.thresholdedSurfaceFit3(ipResTime, image);
-                                result = this.resizeImage(ipResTime, this.gradient(image).getProcessor());
+                                ImageProcessor grad = this.gradient(image).getProcessor();
+                                Rm = this.RmFromMap(ipResTime, grad);
+                                result = this.resizeImage(ipResTime, grad);
                                 break;
                         }
+
+                        //save Rm in hashmap
+                        rmFloatHMap.put(mouse, Rm);
+
                         if (ds.getTotalMice() == 1) {
                             //save individual file if only 1 mouse per trial
                             this.saveHeatMap(resultHMapName + "_" + output + "_T" + ds_counter + "_M" + mouse, result.getProcessor());
@@ -762,7 +776,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                     }
 
                     //average mouse calculations go here
-                    if (jCheckBoxAverageMouse.isSelected() && j != 0) {
+                    if (jCheckBoxAverageMouse.isSelected()) {
                         ImagePlus resTimeStackImp = new ImagePlus("ResTime_" + output + "_T" + ds_counter, resTimeStack);
                         ImagePlus aveResTime = ZProjector.run(resTimeStackImp, "sum");
                         ImagePlus aveXImage = null, aveYImage = null, aveImage = null;
@@ -791,13 +805,17 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                                 output = "div";
                                 aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveXImage);
                                 aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveYImage);
-                                result = this.resizeImage(aveResTime.getProcessor(), this.divergence(aveXImage, aveYImage).getProcessor());
+                                ImageProcessor div = this.divergence(aveXImage, aveYImage).getProcessor();
+                                Rm = this.RmFromMap(aveResTime.getProcessor(), div);
+                                result = this.resizeImage(aveResTime.getProcessor(), div);
                                 break;
                             case 2: //Curl
                                 output = "curl";
                                 aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveXImage);
                                 aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveYImage);
-                                result = this.resizeImage(aveResTime.getProcessor(), this.curl(aveXImage, aveYImage).getProcessor());
+                                ImageProcessor curl = this.curl(aveXImage, aveYImage).getProcessor();
+                                Rm = this.RmFromMap(aveResTime.getProcessor(), curl);
+                                result = this.resizeImage(aveResTime.getProcessor(), curl);
                                 break;
                             case 3: //hm
                                 output = "hm";
@@ -806,9 +824,14 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                             case 4: //Gradient
                                 output = "grad";
                                 aveImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveImage);
-                                result = this.resizeImage(aveResTime.getProcessor(), this.gradient(aveImage).getProcessor());
+                                ImageProcessor grad = this.gradient(aveImage).getProcessor();
+                                Rm = this.RmFromMap(aveResTime.getProcessor(), grad);
+                                result = this.resizeImage(aveResTime.getProcessor(), grad);                                
                                 break;
                         }
+                        //save Rm in hashmap
+                        rmFloatHMap.put(ds.getTotalMice(), Rm);
+
                         if (dss.length != 1) {
                             //add ave mouse of a trial to trial stack
                             trialResultStack.addSlice(result.getProcessor());
@@ -816,13 +839,18 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                             this.saveHeatMap(resultHMapName + "_" + output + "_T" + ds_counter + "_aveM", result.getProcessor());
                         }
                     }
+                    //save Rm Hashmap in datastore if div,curl,grad
+                    if (j == 1 || j == 2 || j == 4) {
+                        rmHMap.put(resultHMapName + "_" + output, rmFloatHMap);
+                        ds.setHMap("Rm Map", rmHMap);
+                    }
                     //trial completed.
                     ds_counter++;
                     System.out.println("Trial no. = " + ds_counter);
                 }
                 if (jCheckBoxAverageMouse.isSelected() && dss.length != 1) {
                     //save stack of ave of all trials
-                    ImagePlus trialResultStackImp = new ImagePlus(resultHMapName + "_" + output, trialResultStack);
+                    ImagePlus trialResultStackImp = new ImagePlus(resultHMapName + "_" + output +"_AveM", trialResultStack);
                     new FileSaver(trialResultStackImp).saveAsTiffStack(dir.getPath() + File.separator + trialResultStackImp.getTitle() + ".tif");
                 }
                 if (j == Integer.MAX_VALUE) {
@@ -839,7 +867,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
 
 ////////            
 ////////            //Method 1 - really messed up my mind to be honest
-////////            //doesnt work with restime selection
+////////            //doesnt work with restime or distance selection
 ////////            //loop through other selections
 ////////            String output = "";
 ////////            for (int j = bs2.nextSetBit(0); j >= 0; j = bs2.nextSetBit(j + 1)) {
@@ -1347,28 +1375,23 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         double[] yBegin = new double[dimX * dimY];
         double[] xEnd = new double[dimX * dimY];
         double[] yEnd = new double[dimX * dimY];
-        ArrayList<Double> X0 = new ArrayList<>();
-        ArrayList<Double> Y0 = new ArrayList<>();
-        ArrayList<Double> X1 = new ArrayList<>();
-        ArrayList<Double> Y1 = new ArrayList<>();
 
         for (int Y = 0; Y < dimY; Y++) {
             for (int X = 0; X < dimX; X++) {
                 int arrayIdx = (Y * dimX) + X;
                 float xPixelValue = xImg.getPixelValue(X, Y);
                 float yPixelValue = yImg.getPixelValue(X, Y);
-                if(xPixelValue !=0 && yPixelValue !=0){
-                xBegin[arrayIdx] = X;
-                yBegin[arrayIdx] = Y;
-                xEnd[arrayIdx] = xPixelValue + X;
-                yEnd[arrayIdx] = yPixelValue + Y;
+                if (xPixelValue != 0 && yPixelValue != 0) {
+                    xBegin[arrayIdx] = X;
+                    yBegin[arrayIdx] = Y;
+                    xEnd[arrayIdx] = xPixelValue + X;
+                    yEnd[arrayIdx] = yPixelValue + Y;
+                }
             }
-        }
         }
         Plot vectorMap = new Plot(resultName + " vector plot", "X Axis", "Y Axis");
         vectorMap.setLimits(0, dimX, 0, dimY);
         vectorMap.drawVectors(xBegin, yBegin, xEnd, yEnd);
-        vectorMap.drawVectors(X0, Y0, X1, Y1);
         vectorMap.show();
         result = vectorMap.getImagePlus();
         return result;
@@ -1388,7 +1411,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         ipResTime.setThreshold(minValue, maxValue, 3);
         ThresholdToSelection tts = new ThresholdToSelection();
         Roi selectionROI = tts.convert(ipResTime);
-        Rectangle bounds = selectionROI.getBounds();
+//        Rectangle bounds = selectionROI.getBounds();
 //        System.out.println("Bounding rect" + bounds);
         image.setRoi(selectionROI);
 
@@ -1447,6 +1470,58 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
     }
 
     /**
+     * calculates Rm value from vector/scalar property map
+     */
+    private float RmFromMap(ImageProcessor ipResTime, ImageProcessor ip) {
+        //threshold out 0 values and create an ROI using restime image
+        double minValue = 1;
+        double maxValue = ipResTime.getMax();
+//        System.out.println("minValue: " + minValue + "maxValue: " + maxValue);
+        ipResTime.setThreshold(minValue, maxValue, 3);
+        ThresholdToSelection tts = new ThresholdToSelection();
+        Roi selectionROI = tts.convert(ipResTime);
+        Rectangle bounds = selectionROI.getBounds();
+//        System.out.println("Bounding rect" + bounds);
+
+        //invert image so minima is maxima
+        ip.invert();
+        //apply resTime ROI on ip
+//        ip.setRoi(selectionROI);
+
+        //Find maxima within the pool ROI
+        OvalRoi pool = new OvalRoi(0, 0, 240, 240);
+        //find maxima
+        MaximumFinder mf = new MaximumFinder();
+        Polygon maximas = mf.getMaxima(ip, 0.00001, true); //excludes edges
+//                        System.out.println("Find Maxima: XCoord " + Arrays.toString(maximas.xpoints));
+//                        System.out.println("Find Maxima: YCoord " + Arrays.toString(maximas.ypoints));
+//                        System.out.println("Points: " + maximas.npoints + Arrays.toString(maximas.xpoints) + Arrays.toString(maximas.ypoints));
+
+        ArrayList<Float> RmList = new ArrayList<>();
+        ArrayList<Float> intensity = new ArrayList<>();
+        int xb = (int) bounds.getX();
+        int yb = (int) bounds.getY();
+        for (int ii = 0; ii < maximas.npoints; ii++) {
+            int X = maximas.xpoints[ii] + xb;
+            int Y = maximas.ypoints[ii] + yb;
+            if (pool.containsPoint(X, Y)) {
+                intensity.add(ip.getPixelValue(maximas.xpoints[ii], maximas.ypoints[ii]));
+                float Rm = (float) Math.sqrt(Math.pow((175 - X), 2) + Math.pow((175 - Y), 2));
+                RmList.add(Rm);
+            }
+        }
+        float Rm;
+        try {
+            float max_intensity = Collections.max(intensity);
+            int index = intensity.indexOf(max_intensity);
+            Rm = RmList.get(index);
+        } catch (NoSuchElementException c) {
+            Rm = Float.NaN;
+        }
+        return Rm;
+    }
+
+    /**
      * resize surface fit-differential images to dimX by dimY dimensions
      */
     private ImagePlus resizeImage(ImageProcessor ipResTime, ImageProcessor ip) {
@@ -1488,7 +1563,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
     }
 
     /**
-     * resize surface fit-differential images to dimX by dimY dimensions
+     * calculates Rm value from polynomial fit of distance vs r-measure
      */
     private float RmFromPolynomialFit(DataTrace_ver1 distVmeasure, String resultName, String mouse) {
         //1st: fit to polynomial, get parameters of fit and plot
