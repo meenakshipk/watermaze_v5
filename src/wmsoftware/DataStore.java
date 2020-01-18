@@ -12,7 +12,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,12 +36,8 @@ public class DataStore {
     private HashMap<Integer, DataTrace_ver1> velocityError = null;
     private HashMap<String, HashMap<Integer, Float>> RmMap = null;
     private HashMap<String, HashMap<Integer, Float>> RmPlot = null;
+    private HashMap<String, HashMap<Integer,float[]>> quadZoneMeasure = null;
 
-//    private HashMap<Integer, ArrayList<Double>> distance = null;
-//    private HashMap<Integer, ArrayList<Double>> speed = null;
-//    private HashMap<Integer, ArrayList<Double>> speedAPt = null;
-//    private HashMap<Integer, ArrayList<Double>> speedPPt = null;
-//    private HashMap<Integer, ArrayList<Double>> speedError = null;
     /**
      *
      * @param num Total number of mice
@@ -108,21 +106,9 @@ public class DataStore {
             case "Rm Plot":
                 result = RmPlot;
                 break;
-//            case "Distance":
-//                result = distance;
-//                break;
-//            case "Speed":
-//                result = speed;
-//                break;
-//            case "Speed along Pt":
-//                result = speedAPt;
-//                break;
-//            case "Speed perpendicular Pt":
-//                result = speedPPt;
-//                break;
-//            case "Speed Error":
-//                result = speedError;
-//                break;
+            case "Quad Zone":
+                result = quadZoneMeasure;
+                break;
         }
         return result;
     }
@@ -156,21 +142,10 @@ public class DataStore {
             case "Rm Plot":
                 RmPlot = hm;
                 break;
-//            case "Distance":
-//                distance = hm;
-//                break;
-//            case "Speed":
-//                speed = hm;
-//                break;
-//            case "Speed along Pt":
-//                speedAPt = hm;
-//                break;
-//            case "Speed perpendicular Pt":
-//                speedPPt = hm;
-//                break;
-//            case "Speed Error":
-//                speedError = hm;
-//                break;
+            case "Quad Zone":
+                quadZoneMeasure = hm;
+                break;
+
         }
     }
 
@@ -226,24 +201,23 @@ public class DataStore {
         }
     }
 
-    public File writeFile(String name, String directory, DataTrace_ver1 vectorBegin, DataTrace_ver1 vectorEnd) {
-        //create a filewriter object
-        FileWriter outStream = null;
-        File out = new File(directory + "\\" + name);
-        try {
-            outStream = new FileWriter(out);
-            int count2 = 0;
-            String toWrite = "";
-            while (count2 < vectorBegin.size() && count2 < vectorEnd.size()) {
-                toWrite += vectorBegin.getX().get(count2) + "\t" + vectorBegin.getY().get(count2) + "\t" + vectorEnd.getX().get(count2) + "\t" + vectorEnd.getY().get(count2) + "\n";
-                count2++;
-            }
-            outStream.write(toWrite);
-            outStream.close();
-        } catch (IOException ex) {
-            Logger.getLogger(DataStore.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return out;
-    }
-
+//    public File writeFile(String name, String directory, DataTrace_ver1 vectorBegin, DataTrace_ver1 vectorEnd) {
+//        //create a filewriter object
+//        FileWriter outStream = null;
+//        File out = new File(directory + "\\" + name);
+//        try {
+//            outStream = new FileWriter(out);
+//            int count2 = 0;
+//            String toWrite = "";
+//            while (count2 < vectorBegin.size() && count2 < vectorEnd.size()) {
+//                toWrite += vectorBegin.getX().get(count2) + "\t" + vectorBegin.getY().get(count2) + "\t" + vectorEnd.getX().get(count2) + "\t" + vectorEnd.getY().get(count2) + "\n";
+//                count2++;
+//            }
+//            outStream.write(toWrite);
+//            outStream.close();
+//        } catch (IOException ex) {
+//            Logger.getLogger(DataStore.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        return out;
+//    }
 }

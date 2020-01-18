@@ -13,16 +13,21 @@ import ij.gui.Plot;
 import ij.gui.PlotWindow;
 import ij.gui.Roi;
 import ij.measure.CurveFitter;
+import ij.measure.Measurements;
+import ij.measure.ResultsTable;
 import ij.plugin.ZProjector;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.plugin.filter.*;
+import ij.plugin.frame.RoiManager;
 import ij.process.Blitter;
 import java.awt.Component;
 import java.awt.Image;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Serializable;
 import static java.lang.Float.NaN;
 import java.util.ArrayList;
@@ -33,6 +38,8 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -99,6 +106,8 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         jButtonGenerateMaps = new javax.swing.JButton();
         jCheckBoxAverageMouse = new javax.swing.JCheckBox();
         jCheckBoxHeatMap = new javax.swing.JCheckBox();
+        jProgressBar = new javax.swing.JProgressBar();
+        jLabel6 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         jCheckBoxRDistvRVel = new javax.swing.JCheckBox();
         jCheckBoxRDistvRVelaP = new javax.swing.JCheckBox();
@@ -109,6 +118,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         jTextFieldUserBin = new javax.swing.JTextField();
         jButtonGeneratePlots = new javax.swing.JButton();
         jCheckBoxAverageMousePlot = new javax.swing.JCheckBox();
+        jButtonPrintRm = new javax.swing.JButton();
 
         jDialog1.setTitle("Select files");
         jDialog1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
@@ -241,7 +251,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
 
         jCheckBoxResTime.setText("Residence Time");
 
-        jCheckBoxASCIIvector.setText("ASCII vector");
+        jCheckBoxASCIIvector.setText("Vector map");
 
         jLabelMaps1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabelMaps1.setText("Maps:");
@@ -261,36 +271,44 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
 
         jCheckBoxAverageMouse.setText("Average Mouse");
 
-        jCheckBoxHeatMap.setText("Heat Map");
+        jCheckBoxHeatMap.setText("Heat map");
+
+        jLabel6.setText("Progress Bar:");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+            .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jCheckBoxResTime)
-                    .addComponent(jLabelMaps)
-                    .addComponent(jCheckBoxRDist)
-                    .addComponent(jCheckBoxRVelpP)
-                    .addComponent(jCheckBoxRVel)
-                    .addComponent(jCheckBoxRVelaP)
-                    .addComponent(jButtonCalculateMeasures)
-                    .addComponent(jCheckBoxRVelErr))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jCheckBoxASCIIvector)
-                    .addComponent(jLabelMaps1)
-                    .addComponent(jCheckBoxGradient)
-                    .addComponent(jCheckBoxDivergence)
-                    .addComponent(jCheckBoxCurl)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jCheckBoxResTime)
+                                    .addComponent(jLabelMaps)
+                                    .addComponent(jCheckBoxRDist)
+                                    .addComponent(jCheckBoxRVelpP)
+                                    .addComponent(jCheckBoxRVel)
+                                    .addComponent(jCheckBoxRVelaP)
+                                    .addComponent(jButtonCalculateMeasures)
+                                    .addComponent(jCheckBoxRVelErr))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jCheckBoxAverageMouse)
+                                    .addComponent(jCheckBoxASCIIvector)
+                                    .addComponent(jLabelMaps1)
+                                    .addComponent(jCheckBoxGradient)
+                                    .addComponent(jCheckBoxDivergence)
+                                    .addComponent(jCheckBoxCurl)
+                                    .addComponent(jButtonGenerateMaps)
+                                    .addComponent(jCheckBoxHeatMap))))
+                        .addGap(292, 292, 292))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(105, 105, 105)
-                        .addComponent(jCheckBoxAverageMouse))
-                    .addComponent(jButtonGenerateMaps)
-                    .addComponent(jCheckBoxHeatMap))
-                .addGap(191, 191, 191))
+                        .addComponent(jLabel6)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -322,16 +340,18 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxGradient)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jCheckBoxRVelErr)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(30, 30, 30)
-                        .addComponent(jCheckBoxAverageMouse)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jCheckBoxRVelErr)
+                .addGap(12, 12, 12)
+                .addComponent(jCheckBoxAverageMouse)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jButtonCalculateMeasures)
                     .addComponent(jButtonGenerateMaps))
-                .addContainerGap(91, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
+                .addComponent(jLabel6)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Generate Maps", jPanel2);
@@ -360,13 +380,17 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
 
         jCheckBoxAverageMousePlot.setText("Average Mouse");
 
+        jButtonPrintRm.setText("Rm values as ASCII file");
+        jButtonPrintRm.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPrintRmActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jButtonGeneratePlots)
-                .addGap(0, 0, Short.MAX_VALUE))
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -381,6 +405,11 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldUserBin, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(325, Short.MAX_VALUE))
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButtonGeneratePlots)
+                    .addComponent(jButtonPrintRm))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -403,7 +432,9 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                 .addComponent(jCheckBoxAverageMousePlot)
                 .addGap(18, 18, 18)
                 .addComponent(jButtonGeneratePlots)
-                .addContainerGap(69, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButtonPrintRm)
+                .addContainerGap(35, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Generate Plots", jPanel3);
@@ -504,70 +535,11 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                 break;
             }
         }
-
-        //////                            ip = image.getProcessor();
-        //////                            ip.invert(); //so minima can be maxima
-        //////
-        //////                            //Find maxima within the pool ROI
-        //////                            OvalRoi pool = new OvalRoi(0, 0, 240, 240);
-        //////                            //find maxima
-        //////                            MaximumFinder mf = new MaximumFinder();
-        //////                            Polygon maximas = mf.getMaxima(ip, 0.00001, true); //excludes edges
-        ////////                        System.out.println("Find Maxima: XCoord " + Arrays.toString(maximas.xpoints));
-        ////////                        System.out.println("Find Maxima: YCoord " + Arrays.toString(maximas.ypoints));
-        ////////                        System.out.println("Points: " + maximas.npoints + Arrays.toString(maximas.xpoints) + Arrays.toString(maximas.ypoints));
-        //////
-        //////                            ArrayList<Float> RmList = new ArrayList<>();
-        //////                            ArrayList<Float> intensity = new ArrayList<>();
-        //////                            int xb = (int) bounds.getX();
-        //////                            int yb = (int) bounds.getY();
-        //////                            for (int ii = 0; ii < maximas.npoints; ii++) {
-        //////                                int X = maximas.xpoints[ii] + xb;
-        //////                                int Y = maximas.ypoints[ii] + yb;
-        //////                                if (pool.containsPoint(X, Y)) {
-        //////                                    intensity.add(ip.getPixelValue(maximas.xpoints[ii], maximas.ypoints[ii]));
-        //////                                    float Rm = (float) Math.sqrt(Math.pow((175 - X), 2) + Math.pow((175 - Y), 2));
-        //////                                    RmList.add(Rm);
-        //////                                }
-        //////                            }
-        //////                            float Rm;
-        //////                            try {
-        //////                                float max_intensity = Collections.max(intensity);
-        //////                                int index = intensity.indexOf(max_intensity);
-        //////                                Rm = RmList.get(index);
-        //////                            } catch (NoSuchElementException c) {
-        //////                                Rm = Float.NaN;
-        //////                            }
-        //////                            System.out.println("Rm list for all maximas UNSORTED: " + RmList);
-        //////                            Collections.sort(RmList);
-        //////                            System.out.println("Rm list for all maximas: " + RmList);
-        //////                            HashMap rmHMap = ds.getHMap(resultName + " Rm Map") == null ? new HashMap<>() : ds.getHMap(resultName + " Rm Map");
-        //////                            rmHMap.put(mouse, Rm);
-        //////                            ds.setHMap(resultName + " Rm Map", rmHMap);
-        //////
-        //////                            //resize image to 240 by 240 dimension
-        //////                            float[][] processedArray = new float[dimX][dimY];
-        //////                            for (int Y = 0; Y < dimY; Y++) {
-        //////                                for (int X = 0; X < dimX; X++) {
-        //////                                    processedArray[X][Y] = Float.NaN;
-        //////                                    //processedArray[X][Y] = 0;
-        //////                                }
-        //////                            }
-        ////////                        int xb = (int) bounds.getX();  //already defined above
-        ////////                        int yb = (int) bounds.getY();  // already defined above
-        //////                            int xbmax = (int) bounds.getWidth();
-        //////                            int ybmax = (int) bounds.getHeight();
-        //////                            float[][] f = ip.getFloatArray();
-        //////                            for (int Y = 0; Y < ybmax; Y++) {
-        //////                                for (int X = 0; X < xbmax; X++) {
-        //////                                    if (pool.containsPoint(X + xb, Y + yb)) {
-        //////                                        processedArray[X + xb][Y + yb] = f[X][Y];
-        //////                                    }
-        //////                                }
-        //////                            }
-        //////                            ImageProcessor processedip = new FloatProcessor(processedArray);
-        //////                            map.saveHeatMap(resultName + "processed_T" + ds_counter + "_M" + mouse, processedip);
-        //////                        }
+        //Select directory to store files when generating maps/plots/ascii origin files
+        JFileChooser Fc = new JFileChooser();
+        Fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        Fc.showOpenDialog(this);
+        dir = Fc.getSelectedFile();
         System.out.println("Button click done.");
     }//GEN-LAST:event_jButtonCalculateMeasuresActionPerformed
 
@@ -615,13 +587,6 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButtonGenerateMapsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateMapsActionPerformed
-// 13.01.2020 - 12.05am - check out label, i.e. the goto version of java, for the map generation code
-
-        //Select directory to store files
-        JFileChooser Fc = new JFileChooser();
-        Fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        Fc.showOpenDialog(this);
-        dir = Fc.getSelectedFile();
 
         //BitSet for measures
         BitSet bs = new BitSet(6);
@@ -639,8 +604,6 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         bs2.set(2, jCheckBoxCurl.isSelected());
         bs2.set(3, jCheckBoxHeatMap.isSelected());
         bs2.set(4, jCheckBoxGradient.isSelected());
-//        bs2.set(1, jCheckBoxxImg.isSelected());
-//        bs2.set(2, jCheckBoxyImg.isSelected());
 
         String resultHMapName = "";
         for (int i = bs.nextSetBit(1); i >= 0; i = bs.nextSetBit(i + 1)) {
@@ -666,11 +629,10 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                     break;
             }
 
-            //Method 1.2 -
-            //doesnt work with restime selection
             //loop through other selections
             String output = "";
             HashMap rmHMap = new HashMap<>();
+            HashMap quadZoneMeasureHMap = new HashMap<>();
             for (int j = bs2.nextSetBit(0); j >= 0; j = bs2.nextSetBit(j + 1)) {
                 int ds_counter = 0;
                 ImageStack trialResultStack = new ImageStack();
@@ -686,6 +648,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                     ImageStack imgStack = new ImageStack(dimX, dimY);
                     ImageStack resultStack = new ImageStack();
                     ImagePlus result = null, xImage = null, yImage = null, image = null;
+                    HashMap quadZoneHMap = new HashMap<Integer, Float[]>();
                     HashMap rmFloatHMap = new HashMap<Integer, Float>();
                     float Rm = Float.NaN;
 
@@ -704,22 +667,23 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                         if (j < 3) {
                             //for vector map, div and curl
                             //create sumPixels image
-                            xImage = this.sumPixelsImage(series, measure.getX());
-                            yImage = this.sumPixelsImage(series, measure.getY());
-                            xImgStack.addSlice(xImage.getProcessor());
-                            yImgStack.addSlice(yImage.getProcessor());
+                            ImageProcessor xImageIp = this.sumPixelsImage(series, measure.getX());
+                            ImageProcessor yImageIp = this.sumPixelsImage(series, measure.getY());
+                            xImgStack.addSlice(xImageIp);
+                            yImgStack.addSlice(yImageIp);
                             //ResTime weighted
-                            //CANNOT average by dividing sumPixels image with resTime - AS IT CREATES NaNs :(
-                            xImage = this.resTimeWeightedMap(ipResTime, xImage.getProcessor());
-                            yImage = this.resTimeWeightedMap(ipResTime, yImage.getProcessor());
+                            xImage = this.resTimeWeightedMap(ipResTime, xImageIp);
+                            yImage = this.resTimeWeightedMap(ipResTime, yImageIp);
+                            //define bounds for resizing image after processing
+
                         } else {
                             //for heat map and gradient
                             //create sumPixels image
                             ArrayList<Double> rMeasure = this.vectorMagnitude(measure);
-                            image = this.sumPixelsImage(series, rMeasure);
-                            imgStack.addSlice(image.getProcessor());
+                            ImageProcessor imageIp = this.sumPixelsImage(series, rMeasure);
+                            imgStack.addSlice(imageIp);
                             //restime weighted
-                            image = this.resTimeWeightedMap(ipResTime, image.getProcessor());
+                            image = this.resTimeWeightedMap(ipResTime, imageIp);
                         }
 
                         switch (j) {
@@ -730,33 +694,45 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                                 break;
                             case 1: //Divergence
                                 output = "div";
-                                xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
-                                yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
+                                xImage = this.thresholdedSurfaceFit3(xImage);
+                                yImage = this.thresholdedSurfaceFit3(yImage);
                                 ImageProcessor div = this.divergence(xImage, yImage).getProcessor();
                                 Rm = this.RmFromMap(ipResTime, div);
                                 result = this.resizeImage(ipResTime, div);
                                 break;
                             case 2: //Curl
                                 output = "curl";
-                                xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
-                                yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
+                                xImage = this.thresholdedSurfaceFit3(xImage);
+                                yImage = this.thresholdedSurfaceFit3(yImage);
                                 ImageProcessor curl = this.curl(xImage, yImage).getProcessor();
                                 Rm = this.RmFromMap(ipResTime, curl);
                                 result = this.resizeImage(ipResTime, curl);
                                 break;
                             case 3: //Heat map
                                 output = "hm";
+//                                //threshold out 0 values and create an ROI in restime image
+//                                double minValue = 1;
+//                                double maxValue = ipResTime.getMax();
+//                                ipResTime.setThreshold(minValue, maxValue, 3);
+//                                ThresholdToSelection tts = new ThresholdToSelection();
+//                                Roi selectionROI = tts.convert(ipResTime);
+                                //pixels not sampled are set to NaN
+                                Roi selectionROI = image.getRoi();
+                                image.getProcessor().setColor(Float.NaN);
+                                image.getProcessor().fillOutside(selectionROI);
                                 result = image;
                                 break;
                             case 4: //Gradient
                                 output = "grad";
-                                image = this.thresholdedSurfaceFit3(ipResTime, image);
+                                image = this.thresholdedSurfaceFit3(image);
                                 ImageProcessor grad = this.gradient(image).getProcessor();
                                 Rm = this.RmFromMap(ipResTime, grad);
                                 result = this.resizeImage(ipResTime, grad);
                                 break;
                         }
-
+                        //get and save quadrant and zone intensity measures in hashmap
+                        float[] quadZoneArray = this.quadrantandZoneMeasures(result);
+                        quadZoneHMap.put(mouse, quadZoneArray);
                         //save Rm in hashmap
                         rmFloatHMap.put(mouse, Rm);
 
@@ -803,32 +779,38 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                                 break;
                             case 1: //Divergence
                                 output = "div";
-                                aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveXImage);
-                                aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveYImage);
+                                aveXImage = this.thresholdedSurfaceFit3(aveXImage);
+                                aveYImage = this.thresholdedSurfaceFit3(aveYImage);
                                 ImageProcessor div = this.divergence(aveXImage, aveYImage).getProcessor();
                                 Rm = this.RmFromMap(aveResTime.getProcessor(), div);
                                 result = this.resizeImage(aveResTime.getProcessor(), div);
                                 break;
                             case 2: //Curl
                                 output = "curl";
-                                aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveXImage);
-                                aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveYImage);
+                                aveXImage = this.thresholdedSurfaceFit3(aveXImage);
+                                aveYImage = this.thresholdedSurfaceFit3(aveYImage);
                                 ImageProcessor curl = this.curl(aveXImage, aveYImage).getProcessor();
                                 Rm = this.RmFromMap(aveResTime.getProcessor(), curl);
                                 result = this.resizeImage(aveResTime.getProcessor(), curl);
                                 break;
                             case 3: //hm
                                 output = "hm";
+                                Roi selectionROI = aveImage.getRoi();
+                                aveImage.getProcessor().setColor(Float.NaN);
+                                aveImage.getProcessor().fillOutside(selectionROI);
                                 result = aveImage;
                                 break;
                             case 4: //Gradient
                                 output = "grad";
-                                aveImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveImage);
+                                aveImage = this.thresholdedSurfaceFit3(aveImage);
                                 ImageProcessor grad = this.gradient(aveImage).getProcessor();
                                 Rm = this.RmFromMap(aveResTime.getProcessor(), grad);
-                                result = this.resizeImage(aveResTime.getProcessor(), grad);                                
+                                result = this.resizeImage(aveResTime.getProcessor(), grad);
                                 break;
                         }
+                        //get and save quadrant and zone intensity measures in hashmap
+                        float[] quadZoneArray = this.quadrantandZoneMeasures(result);
+                        quadZoneHMap.put(ds.getTotalMice(), quadZoneArray);
                         //save Rm in hashmap
                         rmFloatHMap.put(ds.getTotalMice(), Rm);
 
@@ -840,9 +822,13 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                         }
                     }
                     //save Rm Hashmap in datastore if div,curl,grad
-                    if (j == 1 || j == 2 || j == 4) {
-                        rmHMap.put(resultHMapName + "_" + output, rmFloatHMap);
-                        ds.setHMap("Rm Map", rmHMap);
+                    if (j > 0) {
+                        quadZoneMeasureHMap.put(resultHMapName + "_" + output, quadZoneHMap);
+                        ds.setHMap("Quad Zone", rmHMap);
+                        if (j != 3) {
+                            rmHMap.put(resultHMapName + "_" + output, rmFloatHMap);
+                            ds.setHMap("Rm Map", rmHMap);
+                        }
                     }
                     //trial completed.
                     ds_counter++;
@@ -850,7 +836,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
                 }
                 if (jCheckBoxAverageMouse.isSelected() && dss.length != 1) {
                     //save stack of ave of all trials
-                    ImagePlus trialResultStackImp = new ImagePlus(resultHMapName + "_" + output +"_AveM", trialResultStack);
+                    ImagePlus trialResultStackImp = new ImagePlus(resultHMapName + "_" + output + "_AveM", trialResultStack);
                     new FileSaver(trialResultStackImp).saveAsTiffStack(dir.getPath() + File.separator + trialResultStackImp.getTitle() + ".tif");
                 }
                 if (j == Integer.MAX_VALUE) {
@@ -864,180 +850,6 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
             }
         }
         System.out.println("Button click done.");
-
-////////            
-////////            //Method 1 - really messed up my mind to be honest
-////////            //doesnt work with restime or distance selection
-////////            //loop through other selections
-////////            String output = "";
-////////            for (int j = bs2.nextSetBit(0); j >= 0; j = bs2.nextSetBit(j + 1)) {
-////////
-////////                int ds_counter = 0;
-////////                ImageStack trialResultStack = new ImageStack(dimX, dimY);
-////////                for (DataStore ds : dss) {
-////////                    HashMap PositionHMap = ds.getHMap("Position");
-////////                    HashMap HMap = ds.getHMap(resultHMapName);
-////////                    ImageStack resTimeStack = new ImageStack(dimX, dimY);
-////////                    ImageStack xImgStack = new ImageStack(dimX, dimY);
-////////                    ImageStack yImgStack = new ImageStack(dimX, dimY);
-////////                    ImageStack imgStack = new ImageStack(dimX, dimY);
-////////                    ImageStack resultStack = new ImageStack();
-////////
-////////                    //initialisation
-////////                    ImageProcessor ipResTime = null;
-////////                    ImagePlus result = null, xImage = null, yImage = null, image = null;
-////////                    HashMap ResTimeHMap = ds.getHMap("Residence Time");
-////////
-////////                    for (int mouse = 0; mouse < ds.getTotalMice(); mouse++) {
-////////                        DataTrace_ver1 series = (DataTrace_ver1) PositionHMap.get(mouse);
-////////                        DataTrace_ver1 measure = (DataTrace_ver1) HMap.get(mouse);
-////////
-////////                        if (j != 0) {
-////////                            if (ResTimeHMap == null) {
-////////                                JOptionPane.showMessageDialog(frame, "Please calculate Residence Time.", "ERROR", JOptionPane.ERROR_MESSAGE);
-////////                                return;
-////////                            }
-////////                            //resTime
-////////                            ipResTime = (ImageProcessor) ResTimeHMap.get(mouse);
-////////                            resTimeStack.addSlice(ipResTime);
-////////
-////////                            if (j == 1 || j == 2) {
-////////                                //for div and curl
-////////                                xImage = this.createImage(series, measure.getX());
-////////                                yImage = this.createImage(series, measure.getY());
-////////                                xImgStack.addSlice(xImage.getProcessor());
-////////                                yImgStack.addSlice(yImage.getProcessor());
-////////                                xImage = this.thresholdedSurfaceFit3(ipResTime, xImage);
-////////                                yImage = this.thresholdedSurfaceFit3(ipResTime, yImage);
-////////                            } else {
-////////                                //for heat map and gradient
-////////                                ArrayList<Double> rMeasure = this.vectorMagnitude(measure);
-////////                                image = this.createImage(series, rMeasure);
-////////                                imgStack.addSlice(image.getProcessor());
-////////                            }
-////////                        }
-////////
-////////                        switch (j) {
-////////                            case 0:
-////////                                //write vector measure into an ascii file
-////////                                output = "vector";
-////////                                DataTrace_ver1 measureOut = new DataTrace_ver1();
-////////                                for (int ii = 0; ii < measure.size(); ii++) {
-////////                                    double xVal = series.get(ii).getX().doubleValue() + measure.get(ii).getX().doubleValue();
-////////                                    double yVal = series.get(ii).getY().doubleValue() + measure.get(ii).getY().doubleValue();
-////////                                    measureOut.addData(xVal, yVal);
-////////                                }
-////////                                //write ascii
-//////////                            ds.writeFile(resultHMapName + "_T" + ds_counter + "_M" + mouse, dir.getAbsolutePath(), series, measureOut);
-////////                                //plot vectors
-////////                                ArrayList<Double> X1 = (ArrayList<Double>) measureOut.getX();
-////////                                ArrayList<Double> Y1 = (ArrayList<Double>) measureOut.getY();
-////////                                ArrayList<Double> X0 = (ArrayList<Double>) series.getX();
-////////                                X0.remove(X0.get(X1.size()));
-////////                                ArrayList<Double> Y0 = (ArrayList<Double>) series.getY();
-////////                                Y0.remove(Y0.get(Y1.size()));
-////////                                Plot vectorMap = new Plot(resultHMapName + " vector plot", "X Axis", "Y Axis");
-////////                                vectorMap.setLimits(0, dimX, 0, dimY);
-////////                                vectorMap.drawVectors(X0, Y0, X1, Y1);
-////////                                vectorMap.show();
-////////                                result = vectorMap.getImagePlus();
-//////////                                result = vectorMap.makeHighResolution(vectorMap.getTitle(), 1, true, true);
-////////                                break;
-////////                            case 1: //Divergence
-////////                                output = "div";
-////////                                result = this.resizeImage(ipResTime, this.divergence(xImage, yImage).getProcessor());
-////////                                break;
-////////                            case 2: //Curl
-////////                                output = "curl";
-////////                                result = this.resizeImage(ipResTime, this.curl(xImage, yImage).getProcessor());
-////////                                break;
-////////                            case 3: //Heat map
-////////                                output = "hm";
-////////                                result = image;
-////////                                break;
-////////                            case 4: //Gradient
-////////                                output = "grad";
-////////                                result = this.resizeImage(ipResTime, this.gradient(image).getProcessor());
-////////                                break;
-////////                        }
-////////                        if (ds.getTotalMice() == 1) {
-////////                            //save individual file if only 1 mouse per trial
-////////                            this.saveHeatMap(resultHMapName + "_" + output + "_T" + ds_counter + "_M" + mouse, result.getProcessor());
-////////                        } else {
-////////                            //add to stack if more than 1 mouse per trial
-////////                            resultStack.addSlice(result.getProcessor());
-////////                        }
-////////                        //mouse over
-////////                    }
-////////                    if (ds.getTotalMice() != 1) {
-////////                        //save stack
-////////                        ImagePlus resultStackImp = new ImagePlus(resultHMapName + "_" + output + "_T" + ds_counter, resultStack);
-////////                        new FileSaver(resultStackImp).saveAsTiffStack(dir.getPath() + File.separator + resultStackImp.getTitle() + ".tif");
-////////                    }
-////////
-////////                    //average mouse calculations go here
-////////                    if (jCheckBoxAverageMouse.isSelected() && j != 0) {
-////////                        ImagePlus resTimeStackImp = new ImagePlus("ResTime_" + output + "_T" + ds_counter, resTimeStack);
-////////                        ImagePlus aveResTime = ZProjector.run(resTimeStackImp, "sum");
-////////                        ImagePlus aveXImage = null, aveYImage = null, aveImage = null;
-////////
-////////                        if (j == 1 || j == 2) {
-////////                            ImagePlus xImgStackImp = new ImagePlus("xImg_" + resultHMapName + "_" + output + "_T" + ds_counter, xImgStack);
-////////                            ImagePlus yImgStackImp = new ImagePlus("yImg_" + resultHMapName + "_" + output + "_T" + ds_counter, yImgStack);
-////////                            ImagePlus avexImg = ZProjector.run(xImgStackImp, "sum");
-////////                            ImagePlus aveyImg = ZProjector.run(yImgStackImp, "sum");
-////////                            aveXImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), avexImg);
-////////                            aveYImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveyImg);
-////////                        } else {
-////////                            ImagePlus imgStackImp = new ImagePlus("img_" + resultHMapName + "_" + output + "_T" + ds_counter, imgStack);
-////////                            aveImage = ZProjector.run(imgStackImp, "sum");
-////////                        }
-////////                        switch (j) {
-////////                            case 1: //Divergence
-////////                                output = "div";
-////////                                result = this.resizeImage(aveResTime.getProcessor(), this.divergence(aveXImage, aveYImage).getProcessor());
-////////                                break;
-////////                            case 2: //Curl
-////////                                output = "curl";
-////////                                result = this.resizeImage(aveResTime.getProcessor(), this.curl(aveXImage, aveYImage).getProcessor());
-////////                                break;
-////////                            case 3: //hm
-////////                                output = "hm";
-////////                                result = aveImage;
-////////                                break;
-////////                            case 4: //Gradient
-////////                                output = "grad";
-////////                                aveImage = this.thresholdedSurfaceFit3(aveResTime.getProcessor(), aveImage);
-////////                                result = this.resizeImage(aveResTime.getProcessor(), this.gradient(aveImage).getProcessor());
-////////                                break;
-////////                        }
-////////                        if (dss.length != 1) {
-////////                            //add ave mouse of a trial to trial stack
-////////                            trialResultStack.addSlice(result.getProcessor());
-////////                        } else {
-////////                            this.saveHeatMap(resultHMapName + "_" + output + "_T" + ds_counter + "_aveM", result.getProcessor());
-////////                        }
-////////                    }
-////////                    //trial completed.
-////////                    ds_counter++;
-////////                    System.out.println("Trial no. = " + ds_counter);
-////////                }
-////////                if (jCheckBoxAverageMouse.isSelected() && dss.length != 1) {
-////////                    //save stack of ave of all trials
-////////                    ImagePlus trialResultStackImp = new ImagePlus(resultHMapName + "_" + output, trialResultStack);
-////////                    new FileSaver(trialResultStackImp).saveAsTiffStack(dir.getPath() + File.separator + trialResultStackImp.getTitle() + ".tif");
-////////                }
-////////                if (j == Integer.MAX_VALUE) {
-////////                    break;
-////////                }
-////////            }
-////////            System.out.println("Output Measure name: " + output + " " + resultHMapName + " completed");
-////////
-////////            if (i == Integer.MAX_VALUE) {
-////////                break;
-////////            }
-////////        }
-////////        System.out.println("Button click done.");
     }//GEN-LAST:event_jButtonGenerateMapsActionPerformed
 
     private void jButtonGeneratePlotsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGeneratePlotsActionPerformed
@@ -1133,6 +945,28 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         }
         System.out.println("End of button press");
     }//GEN-LAST:event_jButtonGeneratePlotsActionPerformed
+
+    private void jButtonPrintRmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrintRmActionPerformed
+        // TODO add your handling code here:
+//        //create a filewriter object
+//        FileWriter outStream = null;
+//        File out = new File(+"\\" + "RmValues");
+//        try {
+//            outStream = new FileWriter(out);
+//            String toWrite = name + "\t";
+//            outStream.write(toWrite);
+//            toWrite = "";
+//            for (int i = 0; i < hs.size(); i++) {
+//                toWrite += hs.get(i) + "\t";
+//            }
+//            outStream.write(toWrite);
+//            outStream.close();
+//        } catch (IOException ex) {
+//            Logger.getLogger(DataStore.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+
+
+    }//GEN-LAST:event_jButtonPrintRmActionPerformed
 
     /**
      * Calculate vector magnitude i.e. r
@@ -1311,16 +1145,11 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
     /**
      * calculate each pixel value given xy data points in DataTrace_ver1
      */
-    private ImagePlus sumPixelsImage(DataTrace_ver1 curSeries, ArrayList<Double> M) {
+    private ImageProcessor sumPixelsImage(DataTrace_ver1 curSeries, ArrayList<Double> M) {
         ImagePlus image = new ImagePlus();
         ImageProcessor ip = new FloatProcessor(dimX, dimY);
         float[][] ipArray = ip.getFloatArray();
-//        ArrayList<Double> array = new ArrayList<>();
 
-//        for (int count = 0; count < (dimX * dimY); count++) {
-//            array.add(0d);
-////                result.add(Float.NaN); //CANNOT USE THIS WHEN YOU WANT TO USE IMAGE FOR DIFFERENTIALS PLUGIN
-//        }
         int size = M.size();
         for (int j = 0; j < size; j++) {
             double XPo = curSeries.get(j).getX().doubleValue();
@@ -1330,11 +1159,12 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
             int yPix = (int) Math.round(YPo);
 //            array.set(arrayIdx, (array.get(arrayIdx) + M.get(j)));
             ipArray[xPix][yPix] = (float) (ipArray[xPix][yPix] + M.get(j));
-            //NOTE: CANNOT USE NANs WHEN USING ImageCalculator/SurfaceFit/Differentials plugin
+            //NOTE: CANNOT USE NANs WHEN USING SurfaceFit/Differentials plugin
+            //Make NaN image during resize for div,curl,grad. Use ipResROI for heat map
         }
         ip.setFloatArray(ipArray);
-        image.setProcessor(ip);
-        return image;
+//        image.setProcessor(ip);
+        return ip;
     }
 
     /**
@@ -1357,7 +1187,17 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
             }
         }
         ip.setFloatArray(image);
+
+        //Save resTimeROI on imagePlus of measure
+        //threshold out 0 values and create an ROI in restime image
+        double minValue = 1;
+        double maxValue = resTimeMap.getMax();
+        resTimeMap.setThreshold(minValue, maxValue, 3);
+        ThresholdToSelection tts = new ThresholdToSelection();
+        Roi selectionROI = tts.convert(resTimeMap);
+        //ip.setRoi(selectionROI);
         imagePlus.setProcessor(ip);
+        imagePlus.setRoi(selectionROI);
         return imagePlus;
     }
 
@@ -1392,7 +1232,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         Plot vectorMap = new Plot(resultName + " vector plot", "X Axis", "Y Axis");
         vectorMap.setLimits(0, dimX, 0, dimY);
         vectorMap.drawVectors(xBegin, yBegin, xEnd, yEnd);
-        vectorMap.show();
+//        vectorMap.show();
         result = vectorMap.getImagePlus();
         return result;
     }
@@ -1400,21 +1240,20 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
     /**
      * generate polynomial surface fit of order 3
      */
-    private ImagePlus thresholdedSurfaceFit3(ImageProcessor ipResTime, ImagePlus image) {
+    private ImagePlus thresholdedSurfaceFit3(ImagePlus image) {
 
-//    private ImagePlus thresholdedSurfaceFit3(ImagePlus ResTime, ImagePlus image) {
-//        ImageProcessor ipResTime = ResTime.getProcessor();
-        //threshold out 0 values and create an ROI in restime image
-        double minValue = 1;
-        double maxValue = ipResTime.getMax();
-//        System.out.println("minValue: " + minValue + "maxValue: " + maxValue);
-        ipResTime.setThreshold(minValue, maxValue, 3);
-        ThresholdToSelection tts = new ThresholdToSelection();
-        Roi selectionROI = tts.convert(ipResTime);
-//        Rectangle bounds = selectionROI.getBounds();
-//        System.out.println("Bounding rect" + bounds);
-        image.setRoi(selectionROI);
-
+//    private ImagePlus thresholdedSurfaceFit3(ImageProcessor ipResTime, ImagePlus image) {
+// TO DO - Utilise ROI saved in image.getProcessor. Eliminates ipResTime as an input       
+//        //threshold out 0 values and create an ROI in restime image
+//        double minValue = 1;
+//        double maxValue = ipResTime.getMax();
+////        System.out.println("minValue: " + minValue + "maxValue: " + maxValue);
+//        ipResTime.setThreshold(minValue, maxValue, 3);
+//        ThresholdToSelection tts = new ThresholdToSelection();
+//        Roi selectionROI = tts.convert(ipResTime);
+////        Rectangle bounds = selectionROI.getBounds();
+////        System.out.println("Bounding rect" + bounds);
+//        image.setRoi(selectionROI);
         //polynomial fit function -
         Polynomial_Surface_Fit psf = new Polynomial_Surface_Fit(image);
         image = psf.run(image.getProcessor());
@@ -1427,9 +1266,6 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
      */
     private ImagePlus divergence(ImagePlus xImage, ImagePlus yImage) {
 
-//    private ImagePlus divergence(ImagePlus ResTime, ImagePlus xImage, ImagePlus yImage) {
-//        xImage = this.thresholdedSurfaceFit3(ResTime, xImage);
-//        yImage = this.thresholdedSurfaceFit3(ResTime, yImage);
         //differentiate image
         Differentials_JB diffJB = new Differentials_JB();
         diffJB.run2(xImage, 6); //differentiate wrt x        
@@ -1444,10 +1280,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
      */
     private ImagePlus curl(ImagePlus xImage, ImagePlus yImage) {
 
-//    private ImagePlus curl(ImagePlus ResTime, ImagePlus xImage, ImagePlus yImage) {
-//        xImage = this.thresholdedSurfaceFit3(ResTime, xImage);
-//        yImage = this.thresholdedSurfaceFit3(ResTime, yImage);
-//differentiate image
+        //differentiate image
         Differentials_JB diffJB = new Differentials_JB();
         diffJB.run2(yImage, 6); //differentiate wrt x
         diffJB.run2(xImage, 7); //differentiate wrt y        
@@ -1461,8 +1294,6 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
      */
     private ImagePlus gradient(ImagePlus image) {
 
-//    private ImagePlus gradient(ImagePlus ResTime, ImagePlus image) {
-//    image = this.thresholdedSurfaceFit3(ResTime, image);
         //differentiate image
         Differentials_JB diffJB = new Differentials_JB();
         diffJB.run2(image, 0); //gradient magnitude
@@ -1541,8 +1372,8 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         float[][] processedArray = new float[dimX][dimY];
         for (int Y = 0; Y < dimY; Y++) {
             for (int X = 0; X < dimX; X++) {
-//                processedArray[X][Y] = Float.NaN;
-                processedArray[X][Y] = 0;
+                processedArray[X][Y] = Float.NaN;
+//                processedArray[X][Y] = 0;
             }
         }
         int xb = (int) bounds.getX();  //already defined above
@@ -1560,6 +1391,105 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
         ImageProcessor processedip = new FloatProcessor(processedArray);
         imp.setProcessor(processedip);
         return imp;
+    }
+
+    /**
+     * get mean pixel intensity of quadrants and zones
+     */
+    private float[] quadrantandZoneMeasures(ImagePlus imp) {
+        float[] mean = new float[8];
+        int Px = pX;
+        int Py = pY;
+
+        int iWidth = (int) dimX / 2;
+        int iHeight = (int) dimY / 2;
+        int iXROI = 0;
+        int iYROI = 0;
+        Roi[] quadROIs = new Roi[4];
+        quadROIs[0] = new Roi(iXROI, iYROI, iWidth, iHeight);
+        quadROIs[1] = new Roi(iXROI + iWidth, iYROI, iWidth, iHeight);
+        quadROIs[2] = new Roi(iXROI + iWidth, iYROI + iHeight, iWidth, iHeight);
+        quadROIs[3] = new Roi(iXROI, iYROI + iHeight, iWidth, iHeight);
+        RoiManager roiMan = new RoiManager(false);
+        int quadNo = -1;
+        for (int i = 0; i < quadROIs.length; i++) {
+            Roi quad = quadROIs[i];
+            roiMan.addRoi(quad);
+            boolean platQuad = quad.contains(Px, Py);
+            if (platQuad) {
+                quadNo = i;
+            }
+        }
+        OvalRoi[] zoneROIs = new OvalRoi[4];
+        iWidth = 20;
+        iHeight = 20;
+        int x0 = 0, y0 = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0;
+        switch (quadNo) {
+            //quadrants labelled from 0 to 3 in clockwise direction
+            case 0: //quad 0
+                x0 = Px - (iWidth / 2);
+                y0 = Py - (iHeight / 2);
+                x1 = x0 + (dimX / 2);
+                y1 = y0;
+                x2 = x1;
+                y2 = y0 + (dimY / 2);
+                x3 = x0;
+                y3 = y2;
+                break;
+            case 1: //quad 1
+                x1 = Px - (iWidth / 2);
+                y1 = Py - (iHeight / 2);
+                x0 = x1 - (dimX / 2);
+                y0 = y1;
+                x2 = x1;
+                y2 = y1 + (dimY / 2);
+                x3 = x0;
+                y3 = y2;
+                break;
+            case 2: //quad 2
+                x2 = Px - (iWidth / 2);
+                y2 = Py - (iHeight / 2);
+                x0 = x2 - (dimX / 2);
+                y0 = y2 - (dimY / 2);
+                x1 = x2;
+                y1 = y0;
+                x3 = x0;
+                y3 = y2;
+                break;
+            case 3: //quad 3
+                x3 = Px - (iWidth / 2);
+                y3 = Py - (iHeight / 2);
+                x0 = x3;
+                y0 = y3 - (dimY / 2);
+                x1 = x3 - (dimX / 2);
+                y1 = y0;
+                x2 = x1;
+                y2 = y3;
+                break;
+            default:
+                System.out.println("Platform coordinates are not within pool dimensions");
+                break;
+        }
+        zoneROIs[0] = new OvalRoi(x0, y0, iWidth, iHeight);
+        zoneROIs[1] = new OvalRoi(x1, y1, iWidth, iHeight);
+        zoneROIs[2] = new OvalRoi(x2, y2, iWidth, iHeight);
+        zoneROIs[3] = new OvalRoi(x3, y3, iWidth, iHeight);
+        for (OvalRoi zone : zoneROIs) {
+            roiMan.addRoi(zone);
+        }
+        //set mean measurement, multimeasure using 8 rois in roimanager, get results table
+        Analyzer.setMeasurements(Measurements.MEAN);
+        ResultsTable rt = roiMan.multiMeasure(imp);
+        rt.show("");
+
+        //print out result table values
+        for (int row = 0; row < rt.size(); row++) {
+            for (int col = 0; col < roiMan.getCount(); col++) {
+                System.out.println(row + " " + col + " " + rt.getValueAsDouble(col, 0));
+                mean[col] = (float) rt.getValueAsDouble(col, row);
+            }
+        }
+        return mean;
     }
 
     /**
@@ -1656,6 +1586,7 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
     private javax.swing.JButton jButtonCalculateMeasures;
     private javax.swing.JButton jButtonGenerateMaps;
     private javax.swing.JButton jButtonGeneratePlots;
+    private javax.swing.JButton jButtonPrintRm;
     private javax.swing.JButton jButtonReadFiles;
     private javax.swing.JButton jButtonUploadFiles;
     private javax.swing.JCheckBox jCheckBoxASCIIvector;
@@ -1682,12 +1613,14 @@ public class WMSoftwareGUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabelMaps;
     private javax.swing.JLabel jLabelMaps1;
     private javax.swing.JLabel jLabelPlots;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JProgressBar jProgressBar;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextField jTextFieldTotalMiceNo;
     private javax.swing.JTextField jTextFieldTrials;
